@@ -1,0 +1,25 @@
+[theme]
+base = "dark"
+primaryColor = "#973AE8"
+backgroundColor = "#080709"
+secondaryBackgroundColor = "#151118"
+textColor = "#F7F3FA"
+linkColor = "#B9AEFF"
+borderColor = "#302633"
+baseRadius = "12px"
+buttonRadius = "10px"
+showWidgetBorder = true
+showSidebarBorder = true
+font = "sans-serif"
+headingFontSizes = ["36px", "26px", "20px"]
+paddingTop = "2rem"
+
+[theme.sidebar]
+backgroundColor = "#100D14"
+secondaryBackgroundColor = "#1C1522"
+
+[browser]
+gatherUsageStats = false
+
+[client]
+showErrorDetails = false
