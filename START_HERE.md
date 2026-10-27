@@ -12,10 +12,10 @@ Browser: http://localhost:8502/
 Agar app already chal raha hai, naya server launch karne ke bajaye browser refresh karein.
 
 ## Code files
-- app.py: Users aur Admin pages ki navigation.
+- app.py: Public app entry point; login required nahi hai.
 - user_page.py: Orb design, Chat, automatic language aur tools.
-- auth.py: Sign up/Login aur admin access.
-- pages/admin.py: Alag Admin Panel; users enable/disable.
+- auth.py: Purana authentication code; app mein use nahi hota.
+- pages/admin.py: Retired Admin Panel; account data nahi dikhata.
 - agent.py: Gemini chat and optional Google Search.
 - image_service.py: Cloudflare FLUX and Gemini image generation.
 - utilities.py: Hindi/English text-to-speech, PDF conversion, text pad, calculator.
@@ -31,3 +31,7 @@ Voice text Google speech service ko bheja jaata hai.
 Users ka SQLite database local `private/users.sqlite3` mein hai.
 Naye server par accounts/admin apne aap transfer nahi honge.
 GitHub par code upload karna app ko online deploy karna nahi hai.
+
+## Access
+Login, Sign up aur Admin user management hata diye gaye hain. App seedha khulta hai.
+Purana private database disk par preserved hai, app use nahi karta.

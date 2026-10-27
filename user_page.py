@@ -5,7 +5,6 @@ import streamlit as st
 from agent import answer, google_search, GeminiError
 from image_service import create_image, create_cloudflare_image
 from utilities import show_tools
-from auth import require_login, is_admin
 
 st.set_page_config(page_title="Chetan AI • Search & chat", page_icon=":material/auto_awesome:", layout="centered", initial_sidebar_state="expanded")
 
@@ -82,7 +81,6 @@ def render_reply(message):
                 st.caption(source["snippet"])
 
 
-require_login()
 
 workspace_options = ["Chat", "Image Generator", "Voice", "PDF tools", "Text pad", "Calculator"]
 if st.session_state.get("workspace_mode") == "Admin Panel":
@@ -110,8 +108,6 @@ with st.sidebar:
     st.caption("Google configured" if google_ready else "Google optional hai — setup ke liye README dekhein.")
     st.caption("Gemini configured" if api_key else "Gemini key abhi add nahi hui.")
     st.divider()
-    if is_admin(st.session_state.auth_user):
-        st.page_link("pages/admin.py", label="Admin Panel", icon=":material/admin_panel_settings:")
     for tool_name in workspace_options:
         if st.button(tool_name, key="nav_" + tool_name, width="stretch", type="secondary"):
             st.session_state.workspace_mode = tool_name
