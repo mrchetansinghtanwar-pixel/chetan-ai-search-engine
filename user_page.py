@@ -117,8 +117,8 @@ with st.sidebar:
         transcript = "\n\n".join(f"{m['role'].upper()}\n{m['content']}" for m in st.session_state.messages)
         st.download_button("Chat download", transcript, file_name="chetan-chat.txt",
                            mime="text/plain", icon=":material/download:", width="stretch")
-    st.caption("Chat is browser session tak rehti hai. Refresh se reset ho sakti hai.")
-    st.caption("Sawal Google Gemini ko bheje jaate hain. Search on hone par search query Google ko bhi jaati hai.")
+    st.caption("Your chat lasts for this browser session. Refreshing the page may reset it.")
+    st.caption("Your questions are sent to Google Gemini. When web search is enabled, search queries are also sent to Google.")
 
 st.html('<div class="brand">CHETAN AI</div>')
 tool_left, tool_center, tool_right = st.columns([2, 1.2, 2])
