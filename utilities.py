@@ -90,8 +90,12 @@ def show_tools(mode):
             st.download_button("Download MP3", st.session_state.voice_audio, "chetan-voice.mp3", "audio/mpeg")
     elif mode == "PDF tools":
         st.subheader("PDF converter")
-        action = st.radio("Convert", ["Text to PDF", "PDF to text"], horizontal=True)
+        action = st.radio("Convert", ["Text to PDF", "PDF to text", "Word to PDF", "Excel to PDF"], horizontal=True)
         st.caption("PDF conversion runs locally. OCR for scanned PDFs is not supported.")
+        if action in {"Word to PDF", "Excel to PDF"}:
+            from office_pdf import office_pdf_ui
+            office_pdf_ui(action)
+            return
         if action == "Text to PDF":
             st.caption("Text to PDF supports English and Roman Hinglish. Hindi script export is not supported yet.")
             with st.form("text_pdf"):

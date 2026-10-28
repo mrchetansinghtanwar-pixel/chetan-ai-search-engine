@@ -35,3 +35,6 @@ GitHub par code upload karna app ko online deploy karna nahi hai.
 ## Access
 Login, Sign up aur Admin user management hata diye gaye hain. App seedha khulta hai.
 Purana private database disk par preserved hai, app use nahi karta.
+
+## Word / Excel to PDF
+PDF tools includes Word to PDF (.docx) and Excel to PDF (.xlsx). Install LibreOffice on the app server. On Windows: `winget install --id TheDocumentFoundation.LibreOffice --exact`. On Debian/Ubuntu install `libreoffice-writer` and `libreoffice-calc`. Maximum upload 20 MB. Legacy DOC/XLS and macro-enabled formats are not supported. Excel print settings control pagination. Review complex layouts and fonts after export.
