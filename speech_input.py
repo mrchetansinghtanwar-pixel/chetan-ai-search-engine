@@ -22,7 +22,7 @@ def transcribe(audio, api_key, model):
     return text[:8000]
 
 
-def speech_input(api_key, model, disabled=False):
+def speech_input(api_key, model, disabled=False, send_disabled=False):
     submitted = None
     if st.session_state.pop("speech_clear", False):
         st.session_state.speech_draft = ""
@@ -50,7 +50,7 @@ def speech_input(api_key, model, disabled=False):
                     st.rerun()
         if st.session_state.get("speech_draft"):
             text = st.text_area("Transcribed text — edit before sending", key="speech_draft", max_chars=8000)
-            if st.button("Send text", disabled=disabled or not text.strip(), type="primary"):
+            if st.button("Send text", disabled=disabled or send_disabled or not text.strip(), type="primary"):
                 submitted = text.strip()
                 st.session_state.speech_clear = True
     return submitted

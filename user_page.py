@@ -89,7 +89,10 @@ if st.session_state.get("workspace_mode") == "Admin Panel":
 
 st.session_state.setdefault("messages", [])
 st.session_state.setdefault("last_error", "")
-api_key = secret("GEMINI_API_KEY")
+shared_key = secret("GEMINI_API_KEY")
+api_key = secret("GEMINI_CHAT_API_KEY") or shared_key
+voice_key = secret("GEMINI_VOICE_API_KEY") or shared_key
+image_key = secret("GEMINI_IMAGE_API_KEY") or shared_key
 model = secret("GEMINI_MODEL", "gemini-flash-latest")
 google_key, pse_id = secret("GOOGLE_API_KEY"), secret("GOOGLE_PSE_ID")
 google_ready = bool(google_key and pse_id)
@@ -107,7 +110,7 @@ with st.sidebar:
     use_search = st.toggle("Google web search", value=False, disabled=not google_ready,
                            help="The assistant searches when needed, up to 3 searches per turn.")
     st.caption("Google configured" if google_ready else "Google search is optional. See README for setup.")
-    st.caption("Gemini configured" if api_key else "Gemini API key is not configured.")
+    st.caption("Gemini chat configured" if api_key else "Gemini chat key is not configured.")
     st.divider()
     for tool_name in workspace_options:
         if st.button(tool_name, key="nav_" + tool_name, width="stretch", type="secondary"):
@@ -126,8 +129,8 @@ with tool_center:
     mode = st.selectbox("Workspace / Tools", workspace_options, key="workspace_mode")
 if mode == "Chat" and not st.session_state.messages:
     st.html('<div class="orb-stage"><div class="orb" role="img" aria-label="Colourful glowing AI orb"></div><div class="orb-label">Your idea. A new beginning.</div></div>')
-if not api_key:
-    st.info("Add your Gemini API key to secrets.")
+if mode == "Chat" and not api_key:
+    st.info("Add GEMINI_CHAT_API_KEY or GEMINI_API_KEY to secrets to enable chat.")
 
 if mode in {"Voice", "PDF tools", "Text pad", "Calculator"}:
     show_tools(mode)
@@ -137,9 +140,9 @@ if mode == "Image Generator":
     st.caption("Describe a logo, illustration or photo, then select Create image.")
     provider = st.selectbox("Image provider", ["Cloudflare · FLUX", "Gemini"])
     cf_token, cf_account = secret("CLOUDFLARE_API_TOKEN"), secret("CLOUDFLARE_ACCOUNT_ID")
-    image_ready = bool(cf_token and cf_account) if provider.startswith("Cloudflare") else bool(api_key)
+    image_ready = bool(cf_token and cf_account) if provider.startswith("Cloudflare") else bool(image_key)
     if not image_ready:
-        st.info("Save CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in .streamlit/secrets.toml." if provider.startswith("Cloudflare") else "Save your Gemini API key in secrets.")
+        st.info("Save CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in .streamlit/secrets.toml." if provider.startswith("Cloudflare") else "Save GEMINI_IMAGE_API_KEY or GEMINI_API_KEY in secrets.")
     with st.form("image_form"):
         image_prompt = st.text_area("Describe your image", placeholder="A modern Chetan AI logo, purple neon colours, black background…", max_chars=4000, height=120)
         c1, c2 = st.columns(2)
@@ -155,7 +158,7 @@ if mode == "Image Generator":
                 if provider.startswith("Cloudflare"):
                     result = create_cloudflare_image(cf_token, cf_account, image_prompt, image_style)
                 else:
-                    result = create_image(api_key, secret("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image"), image_prompt, image_style, image_ratio)
+                    result = create_image(image_key, secret("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image"), image_prompt, image_style, image_ratio)
                 st.session_state.image_result = result
         except GeminiError as error:
             st.error(str(error))
@@ -181,7 +184,7 @@ retry = False
 if st.session_state.last_error:
     st.error(st.session_state.last_error)
     retry = st.button("Try again", disabled=not api_key)
-voice_prompt = speech_input(api_key, model, disabled=not api_key or pending)
+voice_prompt = speech_input(voice_key, secret("GEMINI_VOICE_MODEL") or model, disabled=not voice_key or pending, send_disabled=not api_key)
 prompt = st.chat_input("Type your question or idea here…", max_chars=8000, disabled=not api_key or pending)
 
 prompt = prompt or voice_prompt

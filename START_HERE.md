@@ -38,3 +38,6 @@ Purana private database disk par preserved hai, app use nahi karta.
 
 ## Word / Excel to PDF
 PDF tools includes Word to PDF (.docx) and Excel to PDF (.xlsx). Install LibreOffice on the app server. On Windows: `winget install --id TheDocumentFoundation.LibreOffice --exact`. On Debian/Ubuntu install `libreoffice-writer` and `libreoffice-calc`. Maximum upload 20 MB. Legacy DOC/XLS and macro-enabled formats are not supported. Excel print settings control pagination. Review complex layouts and fonts after export.
+
+## Separate Gemini keys
+Set GEMINI_CHAT_API_KEY, GEMINI_VOICE_API_KEY and GEMINI_IMAGE_API_KEY in local or Streamlit Cloud secrets. Each blank key falls back to GEMINI_API_KEY. GEMINI_VOICE_MODEL is optional and falls back to GEMINI_MODEL. Cloudflare uses its existing token. Multiple keys in one Google project do not increase its quota. Never commit actual keys.
