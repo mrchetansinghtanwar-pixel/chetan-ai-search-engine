@@ -5,6 +5,7 @@ import streamlit as st
 from agent import answer, google_search, GeminiError
 from image_service import create_image, create_cloudflare_image
 from utilities import show_tools
+from speech_input import speech_input
 
 st.set_page_config(page_title="Chetan AI • Search & chat", page_icon=":material/auto_awesome:", layout="centered", initial_sidebar_state="expanded")
 
@@ -180,8 +181,10 @@ retry = False
 if st.session_state.last_error:
     st.error(st.session_state.last_error)
     retry = st.button("Dobara try karein", disabled=not api_key)
+voice_prompt = speech_input(api_key, model, disabled=not api_key or pending)
 prompt = st.chat_input("Apna sawaal ya idea yahan likhiye…", max_chars=8000, disabled=not api_key or pending)
 
+prompt = prompt or voice_prompt
 if prompt or retry:
     if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})
