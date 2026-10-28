@@ -1,5 +1,6 @@
 """Gemini REST agent with bounded optional search calls."""
 import re
+import time
 import requests
 from urllib.parse import urlsplit
 
@@ -19,14 +20,19 @@ SEARCH_TOOL = {
 def generate(api_key, model, payload):
     if not re.fullmatch(r"[A-Za-z0-9._-]+", model):
         raise GeminiError("Set GEMINI_MODEL to a valid model ID.")
-    try:
-        response = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-            headers={"x-goog-api-key": api_key, "Content-Type": "application/json"},
-            json=payload, timeout=(10, 90),
-        )
-    except requests.RequestException:
-        raise GeminiError("Gemini connection failed or timed out. Please try again.") from None
+    # Retry only explicit transient server failures, never quota or auth errors.
+    for attempt in range(2):
+        try:
+            response = requests.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                headers={"x-goog-api-key": api_key, "Content-Type": "application/json"},
+                json=payload, timeout=(10, 90),
+            )
+        except requests.RequestException:
+            raise GeminiError("Gemini connection failed or timed out. Please try again.") from None
+        if response.status_code not in {500, 502, 503, 504} or attempt == 1:
+            break
+        time.sleep(1)
     if response.status_code == 429:
         try:
             error_message = str(response.json().get("error", {}).get("message", ""))
@@ -39,10 +45,14 @@ def generate(api_key, model, payload):
         401: "Invalid Gemini key. Update the key in secrets.",
         403: "Gemini access denied. Check key restrictions and account eligibility.",
         404: "Gemini model not found. Update GEMINI_MODEL to an available model ID.",
+        500: "Gemini returned an internal server error (HTTP 500). Please try again later.",
+        502: "Gemini gateway error (HTTP 502). Please try again later.",
+        503: "Gemini is temporarily unavailable or busy (HTTP 503). Please try again later.",
+        504: "Gemini server timed out (HTTP 504). Try a shorter request or retry later.",
         429: "Gemini quota or rate limit reached. Try again later or check your quota.",
     }
     if response.status_code != 200:
-        raise GeminiError(messages.get(response.status_code, "Gemini service request failed. Please try again later."))
+        raise GeminiError(messages.get(response.status_code, f"Gemini request failed (HTTP {response.status_code}). Check the app configuration or try again later."))
     try:
         data = response.json()
         if not isinstance(data, dict):
