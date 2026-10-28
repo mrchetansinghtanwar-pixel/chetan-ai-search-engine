@@ -8,7 +8,7 @@ import streamlit as st
 
 def calculate(expression):
     if len(expression) > 200:
-        raise ValueError("Expression bahut lamba hai.")
+        raise ValueError("The expression is too long.")
     tree = ast.parse(expression, mode="eval")
     ops = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul,
            ast.Div: operator.truediv, ast.Mod: operator.mod, ast.Pow: operator.pow}
@@ -20,12 +20,12 @@ def calculate(expression):
         elif isinstance(node, ast.BinOp) and type(node.op) in ops:
             a, b = visit(node.left), visit(node.right)
             if isinstance(node.op, ast.Pow) and abs(b) > 100:
-                raise ValueError("Power maximum 100 rakhein.")
+                raise ValueError("The exponent must not exceed 100 in magnitude.")
             value = ops[type(node.op)](a, b)
         else:
-            raise ValueError("Sirf numbers, brackets aur + - * / % ** allowed hain.")
+            raise ValueError("Only numbers, parentheses and + - * / % ** are allowed.")
         if isinstance(value, complex) or abs(value) > 1e100:
-            raise ValueError("Result bahut bada ya unsupported hai.")
+            raise ValueError("The result is too large or unsupported.")
         return value
     return visit(tree.body)
 
@@ -35,7 +35,7 @@ def make_pdf(text):
     from reportlab.lib.styles import getSampleStyleSheet
     from reportlab.lib.pagesizes import A4
     if any(ord(c)>255 for c in text):
-        raise ValueError("Is PDF version mein English/Hinglish Latin text use karein.")
+        raise ValueError("Use English or Roman Hinglish text for PDF export.")
     out = io.BytesIO()
     doc = SimpleDocTemplate(out, pagesize=A4, rightMargin=42, leftMargin=42, topMargin=45, bottomMargin=45)
     styles = getSampleStyleSheet()
@@ -56,57 +56,57 @@ def show_tools(mode):
         if go:
             try: st.success(str(calculate(expression)))
             except (ValueError, SyntaxError, ZeroDivisionError, OverflowError, RecursionError):
-                st.error("Calculation valid nahi hai. Numbers aur operators check karein; zero se divide na karein.")
+                st.error("Invalid calculation. Check numbers and operators, and avoid division by zero.")
         st.caption("+ add · - subtract · * multiply · / divide · % remainder · ** power")
     elif mode == "Text pad":
         st.subheader("Text copy / paste")
-        text = st.text_area("Yahan text paste ya type karein", height=250, key="text_pad", max_chars=50000)
+        text = st.text_area("Type or paste your text here", height=250, key="text_pad", max_chars=50000)
         st.caption(f"{len(text.split())} words · {len(text)} characters")
         if text:
-            st.caption("Neeche code box ke copy icon se poora text copy karein.")
+            st.caption("Use the copy icon in the box below to copy all text.")
             st.code(text, language=None)
-            st.download_button("TXT download", text, "chetan-text.txt", "text/plain")
+            st.download_button("Download TXT", text, "chetan-text.txt", "text/plain")
     elif mode == "Voice":
-        st.subheader("Text se voice")
-        st.caption("Audio banane par yeh text Google ki speech service ko bheja jayega. Internet chahiye; service limits ho sakti hain.")
+        st.subheader("Text to speech")
+        st.caption("Creating audio sends your text to Google's speech service. Internet access is required; service limits may apply.")
         with st.form("voice"):
-            text = st.text_area("Bolne ke liye text", height=150, max_chars=2000)
+            text = st.text_area("Text to read aloud", height=150, max_chars=2000)
             lang = st.selectbox("Voice language", ["Hindi", "English"])
-            slow = st.checkbox("Dheere bolein")
-            go = st.form_submit_button("Audio banao", type="primary")
+            slow = st.checkbox("Speak slowly")
+            go = st.form_submit_button("Create audio", type="primary")
         if go and text.strip():
             try:
                 from gtts import gTTS
-                with st.spinner("Audio ban raha hai…"):
+                with st.spinner("Creating audio…"):
                     out = io.BytesIO()
                     gTTS(text=text, lang="hi" if lang == "Hindi" else "en", slow=slow, timeout=20).write_to_fp(out)
                     st.session_state.voice_audio = out.getvalue()
             except Exception:
-                st.error("Voice service se connection nahi hua. Baad mein retry karein.")
+                st.error("Could not connect to the voice service. Please try again later.")
         elif go:
-            st.warning("Pehle text likhiye.")
+            st.warning("Enter some text first.")
         if st.session_state.get("voice_audio"):
             st.audio(st.session_state.voice_audio, format="audio/mp3")
-            st.download_button("MP3 download", st.session_state.voice_audio, "chetan-voice.mp3", "audio/mpeg")
+            st.download_button("Download MP3", st.session_state.voice_audio, "chetan-voice.mp3", "audio/mpeg")
     elif mode == "PDF tools":
         st.subheader("PDF converter")
         action = st.radio("Convert", ["Text to PDF", "PDF to text"], horizontal=True)
-        st.caption("PDF conversion local hai. Scanned PDF ke liye OCR is version mein nahi hai.")
+        st.caption("PDF conversion runs locally. OCR for scanned PDFs is not supported.")
         if action == "Text to PDF":
-            st.caption("Text to PDF: English / Roman Hinglish supported. Hindi script export abhi supported nahi hai.")
+            st.caption("Text to PDF supports English and Roman Hinglish. Hindi script export is not supported yet.")
             with st.form("text_pdf"):
-                text = st.text_area("PDF ka text", height=220, max_chars=50000)
-                go = st.form_submit_button("PDF banao", type="primary")
+                text = st.text_area("Text for your PDF", height=220, max_chars=50000)
+                go = st.form_submit_button("Create PDF", type="primary")
             if go:
                 if text.strip():
                     try: st.session_state.pdf_bytes = make_pdf(text)
-                    except Exception: st.error("PDF create nahi hui. Text ya font support check karein.")
-                else: st.warning("Pehle text likhiye.")
+                    except Exception: st.error("Could not create the PDF. Check text and font support.")
+                else: st.warning("Enter some text first.")
             if st.session_state.get("pdf_bytes"):
-                st.download_button("PDF download", st.session_state.pdf_bytes, "chetan-document.pdf", "application/pdf")
+                st.download_button("Download PDF", st.session_state.pdf_bytes, "chetan-document.pdf", "application/pdf")
         else:
-            upload = st.file_uploader("PDF upload karein (max 10 MB, 100 pages)", type=["pdf"])
-            if st.button("Text nikalo", disabled=upload is None):
+            upload = st.file_uploader("Upload a PDF (maximum 10 MB, 100 pages)", type=["pdf"])
+            if st.button("Extract text", disabled=upload is None):
                 try:
                     from pypdf import PdfReader
                     if upload.size > 10*1024*1024: raise ValueError()
@@ -114,8 +114,8 @@ def show_tools(mode):
                     if reader.is_encrypted or len(reader.pages)>100: raise ValueError()
                     extracted = "\n\n".join(page.extract_text() or "" for page in reader.pages)
                     st.session_state.pdf_text = extracted[:200000]
-                    if not extracted.strip(): st.warning("Text nahi mila. Yeh scanned PDF ho sakti hai; OCR chahiye.")
-                except Exception: st.error("PDF read nahi hui. Unlocked PDF, 10 MB aur 100-page limit check karein.")
+                    if not extracted.strip(): st.warning("No text found. This may be a scanned PDF that requires OCR.")
+                except Exception: st.error("Could not read the PDF. Use an unlocked file within 10 MB and 100 pages.")
             if st.session_state.get("pdf_text"):
-                st.text_area("Extracted text — select karke copy karein", value=st.session_state.pdf_text, height=250)
-                st.download_button("Text download", st.session_state.pdf_text, "pdf-text.txt", "text/plain")
+                st.text_area("Extracted text — select to copy", value=st.session_state.pdf_text, height=250)
+                st.download_button("Download text", st.session_state.pdf_text, "pdf-text.txt", "text/plain")

@@ -18,7 +18,7 @@ SEARCH_TOOL = {
 
 def generate(api_key, model, payload):
     if not re.fullmatch(r"[A-Za-z0-9._-]+", model):
-        raise GeminiError("GEMINI_MODEL mein valid model ID dalein.")
+        raise GeminiError("Set GEMINI_MODEL to a valid model ID.")
     try:
         response = requests.post(
             f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
@@ -26,30 +26,30 @@ def generate(api_key, model, payload):
             json=payload, timeout=(10, 90),
         )
     except requests.RequestException:
-        raise GeminiError("Gemini connection fail ya timeout hua. Dobara try karein.") from None
+        raise GeminiError("Gemini connection failed or timed out. Please try again.") from None
     if response.status_code == 429:
         try:
             error_message = str(response.json().get("error", {}).get("message", ""))
         except ValueError:
             error_message = ""
         if re.search(r"limit:\s*0(?:\D|$)", error_message):
-            raise GeminiError("Is model ke liye aapke Google project ka quota 0 hai. Sirf wait/retry se access nahi milega. Google AI Studio mein is model ki quota aur billing eligibility check karein. Normal chat ka quota alag hai.")
+            raise GeminiError("Your Google project has zero quota for this model. Waiting or retrying will not enable access. Check model quota and billing eligibility in Google AI Studio. Chat quota is separate.")
     messages = {
-        400: "Request valid nahi hai. API key, model aur configuration check karein.",
-        401: "Gemini key valid nahi hai. Secrets mein nayi key dalein.",
-        403: "Gemini access denied. Key restrictions aur account eligibility check karein.",
-        404: "Gemini model nahi mila. GEMINI_MODEL ko available model ID se update karein.",
-        429: "Gemini free quota/rate limit poori hui. Thodi der baad retry karein ya quota check karein.",
+        400: "Invalid request. Check the API key, model and configuration.",
+        401: "Invalid Gemini key. Update the key in secrets.",
+        403: "Gemini access denied. Check key restrictions and account eligibility.",
+        404: "Gemini model not found. Update GEMINI_MODEL to an available model ID.",
+        429: "Gemini quota or rate limit reached. Try again later or check your quota.",
     }
     if response.status_code != 200:
-        raise GeminiError(messages.get(response.status_code, "Gemini service request fail hui. Baad mein retry karein."))
+        raise GeminiError(messages.get(response.status_code, "Gemini service request failed. Please try again later."))
     try:
         data = response.json()
         if not isinstance(data, dict):
             raise ValueError
         return data
     except ValueError:
-        raise GeminiError("Gemini se invalid response mila. Dobara try karein.") from None
+        raise GeminiError("Gemini returned an invalid response. Please try again.") from None
 
 def safe_url(url):
     try:
@@ -101,7 +101,7 @@ def answer(api_key, model, history, language, search=None, on_status=lambda text
     sources, warnings = [], []
     searches = 0
     for round_number in range(4):
-        on_status('Gemini jawab taiyaar kar raha hai…')
+        on_status('Gemini is preparing a response…')
         payload = {
             'systemInstruction': {'parts': [{'text': instructions}]},
             'contents': contents,
@@ -114,7 +114,7 @@ def answer(api_key, model, history, language, search=None, on_status=lambda text
         data = generate(api_key, model, payload)
         candidates = data.get('candidates') or []
         if not candidates:
-            raise GeminiError('Gemini ne jawab return nahi kiya. Sawal ko rephrase karke try karein.')
+            raise GeminiError('Gemini did not return a response. Try rephrasing your question.')
         candidate = candidates[0]
         content = candidate.get('content') or {'role': 'model', 'parts': []}
         parts = content.get('parts') or []
@@ -122,9 +122,9 @@ def answer(api_key, model, history, language, search=None, on_status=lambda text
         if not calls:
             text = '\n'.join(p['text'] for p in parts if 'text' in p and not p.get('thought'))
             if not text:
-                raise GeminiError('Jawab empty ya blocked tha. Sawal badal kar try karein.')
+                raise GeminiError('The response was empty or blocked. Try a different question.')
             if candidate.get('finishReason') == 'MAX_TOKENS':
-                warnings.append('Output limit aa gayi; jawab adhura ho sakta hai.')
+                warnings.append('Output limit reached; the response may be incomplete.')
             return {'content': text, 'sources': sources, 'warnings': list(dict.fromkeys(warnings))}
         # Preserve full model content, including opaque thought signatures.
         contents.append(content)
@@ -133,7 +133,7 @@ def answer(api_key, model, history, language, search=None, on_status=lambda text
             result = {'error': 'Tool unavailable or search limit reached.', 'sources': []}
             if call.get('name') == 'google_search' and search and searches < 3:
                 searches += 1
-                on_status('Google par sources khoj raha hoon…')
+                on_status('Searching Google for sources…')
                 args = call.get('args') or {}
                 if isinstance(args, dict):
                     result = search(args.get('query'))
@@ -147,4 +147,4 @@ def answer(api_key, model, history, language, search=None, on_status=lambda text
                 function_response['id'] = call['id']
             responses.append({'functionResponse': function_response})
         contents.append({'role': 'user', 'parts': responses})
-    raise GeminiError('Search limit poori ho gayi. Sawal ko specific karke dobara try karein.')
+    raise GeminiError('Search limit reached. Try a more specific question.')

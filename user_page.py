@@ -63,7 +63,7 @@ def secret(name, default=""):
             data = tomllib.loads(local_file.read_text(encoding="utf-8-sig"))
             return str(data.get(name, default)).strip()
         except (OSError, ValueError):
-            st.error("Secrets file ka format sahi nahi hai. Quotes aur setting names check karein.")
+            st.error("Invalid secrets file format. Check quotation marks and setting names.")
             st.stop()
     try:
         return str(st.secrets.get(name, default)).strip()
@@ -95,19 +95,19 @@ google_key, pse_id = secret("GOOGLE_API_KEY"), secret("GOOGLE_PSE_ID")
 google_ready = bool(google_key and pse_id)
 
 with st.sidebar:
-    if st.button("Nayi chat", icon=":material/add:", width="stretch", type="primary"):
+    if st.button("New chat", icon=":material/add:", width="stretch", type="primary"):
         st.session_state.messages = []
         st.session_state.last_error = ""
         st.rerun()
     st.divider()
-    language_choice = st.selectbox("Language / भाषा", ["Auto", "English", "हिन्दी", "Hinglish"], key="reply_language")
-    language = {"Auto": "the language of the user's latest message; detect it automatically (Hindi script for Hindi, English for English, Roman Hinglish for Roman Hindi)", "English": "English", "हिन्दी": "Hindi in Devanagari script", "Hinglish": "Roman Hinglish"}[language_choice]
+    language_choice = st.selectbox("Response language", ["Auto", "English", "Hindi", "Hinglish"], key="reply_language")
+    language = {"Auto": "the language of the user's latest message; detect it automatically (Hindi script for Hindi, English for English, Roman Hinglish for Roman Hindi)", "English": "English", "Hindi": "Hindi in Devanagari script", "Hinglish": "Roman Hinglish"}[language_choice]
     if language_choice == "Auto":
-        st.caption("Auto: aap jis bhasha mein poochhenge, AI usi mein jawab dega.")
+        st.caption("Auto: replies match the language of your question.")
     use_search = st.toggle("Google web search", value=False, disabled=not google_ready,
-                           help="Assistant zaroorat par search karega. Maximum 3 searches per turn.")
-    st.caption("Google configured" if google_ready else "Google optional hai — setup ke liye README dekhein.")
-    st.caption("Gemini configured" if api_key else "Gemini key abhi add nahi hui.")
+                           help="The assistant searches when needed, up to 3 searches per turn.")
+    st.caption("Google configured" if google_ready else "Google search is optional. See README for setup.")
+    st.caption("Gemini configured" if api_key else "Gemini API key is not configured.")
     st.divider()
     for tool_name in workspace_options:
         if st.button(tool_name, key="nav_" + tool_name, width="stretch", type="secondary"):
@@ -115,7 +115,7 @@ with st.sidebar:
             st.rerun()
     if st.session_state.messages:
         transcript = "\n\n".join(f"{m['role'].upper()}\n{m['content']}" for m in st.session_state.messages)
-        st.download_button("Chat download", transcript, file_name="chetan-chat.txt",
+        st.download_button("Download chat", transcript, file_name="chetan-chat.txt",
                            mime="text/plain", icon=":material/download:", width="stretch")
     st.caption("Your chat lasts for this browser session. Refreshing the page may reset it.")
     st.caption("Your questions are sent to Google Gemini. When web search is enabled, search queries are also sent to Google.")
@@ -125,33 +125,33 @@ tool_left, tool_center, tool_right = st.columns([2, 1.2, 2])
 with tool_center:
     mode = st.selectbox("Workspace / Tools", workspace_options, key="workspace_mode")
 if mode == "Chat" and not st.session_state.messages:
-    st.html('<div class="orb-stage"><div class="orb" role="img" aria-label="Colourful glowing AI orb"></div><div class="orb-label">Aapka idea. Ek nayi shuruaat.</div></div>')
+    st.html('<div class="orb-stage"><div class="orb" role="img" aria-label="Colourful glowing AI orb"></div><div class="orb-label">Your idea. A new beginning.</div></div>')
 if not api_key:
-    st.info("Gemini API key secrets mein add karein.")
+    st.info("Add your Gemini API key to secrets.")
 
 if mode in {"Voice", "PDF tools", "Text pad", "Calculator"}:
     show_tools(mode)
     st.stop()
 if mode == "Image Generator":
-    st.subheader("Apne ideas ko image banaiye")
-    st.caption("Logo, illustration ya photo — describe karein aur create dabayein.")
+    st.subheader("Turn your ideas into images")
+    st.caption("Describe a logo, illustration or photo, then select Create image.")
     provider = st.selectbox("Image provider", ["Cloudflare · FLUX", "Gemini"])
     cf_token, cf_account = secret("CLOUDFLARE_API_TOKEN"), secret("CLOUDFLARE_ACCOUNT_ID")
     image_ready = bool(cf_token and cf_account) if provider.startswith("Cloudflare") else bool(api_key)
     if not image_ready:
-        st.info("Cloudflare setup: .streamlit/secrets.toml mein CLOUDFLARE_API_TOKEN aur CLOUDFLARE_ACCOUNT_ID save karein." if provider.startswith("Cloudflare") else "Gemini key save karein.")
+        st.info("Save CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in .streamlit/secrets.toml." if provider.startswith("Cloudflare") else "Save your Gemini API key in secrets.")
     with st.form("image_form"):
-        image_prompt = st.text_area("Kaisi image chahiye?", placeholder="Ek modern Chetan AI logo, purple neon colours, black background…", max_chars=4000, height=120)
+        image_prompt = st.text_area("Describe your image", placeholder="A modern Chetan AI logo, purple neon colours, black background…", max_chars=4000, height=120)
         c1, c2 = st.columns(2)
         with c1:
             image_style = st.selectbox("Style", ["Photorealistic", "Logo / minimal", "3D illustration", "Digital art", "Anime"])
         with c2:
             image_ratio = st.selectbox("Size", ["1:1"] if provider.startswith("Cloudflare") else ["1:1", "16:9", "9:16"])
-        create = st.form_submit_button("Image banao", type="primary", icon=":material/auto_awesome:", disabled=not image_ready, width="stretch")
-    st.caption("Cloudflare free allowance limited hai; account usage dashboard mein quota dekhein. Gemini images ki billing alag hai.")
+        create = st.form_submit_button("Create image", type="primary", icon=":material/auto_awesome:", disabled=not image_ready, width="stretch")
+    st.caption("Cloudflare has a limited free allowance. Check your usage dashboard. Gemini image billing is separate.")
     if create:
         try:
-            with st.spinner("Aapki image ban rahi hai…"):
+            with st.spinner("Creating your image…"):
                 if provider.startswith("Cloudflare"):
                     result = create_cloudflare_image(cf_token, cf_account, image_prompt, image_style)
                 else:
@@ -160,14 +160,14 @@ if mode == "Image Generator":
         except GeminiError as error:
             st.error(str(error))
         except Exception:
-            st.error("Image request complete nahi hui. Dobara try karein.")
+            st.error("The image request failed. Please try again.")
     if st.session_state.get("image_result"):
         result = st.session_state.image_result
         st.caption("Last generated image · " + result["prompt"])
         for index, item in enumerate(result["images"]):
             st.image(item["data"], width="stretch")
             ext = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp"}[item["mime"]]
-            st.download_button("Image download", item["data"], file_name=f"chetan-ai-{index+1}.{ext}", mime=item["mime"], key=f"image_download_{index}")
+            st.download_button("Download image", item["data"], file_name=f"chetan-ai-{index+1}.{ext}", mime=item["mime"], key=f"image_download_{index}")
         if result["notes"]:
             st.markdown(result["notes"])
     st.stop()
@@ -180,7 +180,7 @@ pending = bool(st.session_state.messages and st.session_state.messages[-1]["role
 retry = False
 if st.session_state.last_error:
     st.error(st.session_state.last_error)
-    retry = st.button("Dobara try karein", disabled=not api_key)
+    retry = st.button("Try again", disabled=not api_key)
 voice_prompt = speech_input(api_key, model, disabled=not api_key or pending)
 prompt = st.chat_input("Type your question or idea here…", max_chars=8000, disabled=not api_key or pending)
 
@@ -190,7 +190,7 @@ if prompt or retry:
         st.session_state.messages.append({"role": "user", "content": prompt})
     st.session_state.last_error = ""
     try:
-        with st.spinner("Chetan AI kaam kar raha hai…"):
+        with st.spinner("Chetan AI is working…"):
             status = st.empty()
             search = (lambda query: google_search(query, google_key, pse_id)) if use_search else None
             result = answer(api_key, model, st.session_state.messages, language, search, status.caption)
@@ -199,7 +199,7 @@ if prompt or retry:
         st.session_state.last_error = str(error)
     except Exception:
         # Do not render raw exceptions: upstream request details may contain secrets.
-        st.session_state.last_error = "Request complete nahi hui. Configuration check karke retry karein."
+        st.session_state.last_error = "The request failed. Check your configuration and try again."
     st.rerun()
 
 
