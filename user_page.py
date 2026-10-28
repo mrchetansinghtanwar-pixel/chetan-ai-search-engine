@@ -184,7 +184,7 @@ retry = False
 if st.session_state.last_error:
     st.error(st.session_state.last_error)
     retry = st.button("Try again", disabled=not api_key)
-voice_prompt = speech_input(voice_key, secret("GEMINI_VOICE_MODEL") or model, disabled=not voice_key or pending, send_disabled=not api_key)
+voice_prompt = speech_input(voice_key, secret("GEMINI_VOICE_MODEL") or model, disabled=not voice_key or not api_key or pending)
 prompt = st.chat_input("Type your question or idea here…", max_chars=8000, disabled=not api_key or pending)
 
 prompt = prompt or voice_prompt
