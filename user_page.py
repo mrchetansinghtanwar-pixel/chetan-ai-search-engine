@@ -84,7 +84,7 @@ def render_reply(message):
 
 
 
-workspace_options = ["Chat", "Image Generator", "Voice", "PDF tools", "Text pad", "Calculator"]
+workspace_options = ["Chat", "Chat with PDF", "Image Generator", "Voice", "PDF tools", "Text pad", "Calculator"]
 if st.session_state.get("workspace_mode") == "Admin Panel":
     st.session_state.workspace_mode = "Chat"
 
@@ -156,6 +156,10 @@ if mode == "Chat" and not st.session_state.messages:
 if mode == "Chat" and not chat_ready:
     st.info("Select an AI provider and model, then enter its API key in the sidebar to start chatting.")
 
+if mode == "Chat with PDF":
+    from pdf_chat import pdf_chat_ui
+    pdf_chat_ui(chat_provider, api_key, model, language, temperature, max_tokens)
+    st.stop()
 if mode in {"Voice", "PDF tools", "Text pad", "Calculator"}:
     show_tools(mode)
     st.stop()

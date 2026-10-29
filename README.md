@@ -108,3 +108,18 @@ Chat current browser session mein rehti hai, permanent database mein nahi. Refre
 ```
 
 7 mocked tests pass: chat, search round trip/signatures, search budget, sanitized HTTP errors, blocked response, missing key, retry/reset. Real paid/free API requests tests mein nahi chalte. Live API verification apni private nayi key configure karne ke baad karein.
+# Chat with PDF (LangChain)
+
+Choose **Chat with PDF** from Workspace / Tools. Upload an unlocked, text-based
+PDF (10 MB, 100 pages, 500,000 extracted characters maximum), select a chat
+provider/model and enter your session API key. Ask a specific question using
+words from the document. Each question is independent.
+
+LangChain splits pages into passages; local keyword retrieval selects up to five
+passages for the selected chat provider. No embedding API key is required.
+Only the question and selected passages are sent for answering. Files and answers
+are kept in server memory for the current session, not a shared document index. Changing or
+removing the upload clears its Q&A history. Source passages show physical PDF page
+numbers so you can verify the model's answer. Scans require OCR first; semantic
+cross-language search and whole-document summaries are not supported.
+
