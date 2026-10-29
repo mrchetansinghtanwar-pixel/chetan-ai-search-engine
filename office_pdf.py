@@ -8,6 +8,7 @@ import tempfile
 import zipfile
 import hashlib
 import streamlit as st
+from download_names import pdf_filename
 
 
 def office_binary():
@@ -91,4 +92,5 @@ def office_pdf_ui(action):
     result = st.session_state.get("office_pdf_result")
     if upload and result and result[0] == fingerprint:
         st.success("Your PDF is ready.")
-        st.download_button("Download PDF", result[1], file_name=Path(upload.name).stem + ".pdf", mime="application/pdf")
+        filename = pdf_filename(Path(upload.name).stem, "office_name_" + fingerprint)
+        st.download_button("Download PDF", result[1], file_name=filename, mime="application/pdf")

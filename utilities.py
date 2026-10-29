@@ -4,6 +4,7 @@ import operator
 import io
 import html
 import streamlit as st
+from download_names import pdf_filename
 
 
 def calculate(expression):
@@ -107,7 +108,8 @@ def show_tools(mode):
                     except Exception: st.error("Could not create the PDF. Check text and font support.")
                 else: st.warning("Enter some text first.")
             if st.session_state.get("pdf_bytes"):
-                st.download_button("Download PDF", st.session_state.pdf_bytes, "chetan-document.pdf", "application/pdf")
+                filename = pdf_filename("chetan-document", "text_pdf_filename")
+                st.download_button("Download PDF", st.session_state.pdf_bytes, filename, "application/pdf")
         else:
             upload = st.file_uploader("Upload a PDF (maximum 10 MB, 100 pages)", type=["pdf"])
             if st.button("Extract text", disabled=upload is None):
