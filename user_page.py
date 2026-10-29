@@ -2,7 +2,8 @@
 from pathlib import Path
 import tomllib
 import streamlit as st
-from agent import answer, google_search, GeminiError
+from agent import google_search, GeminiError
+from providers import MODELS, list_models, chat_answer
 from image_service import create_image, create_cloudflare_image
 from utilities import show_tools
 from speech_input import speech_input
@@ -89,19 +90,32 @@ if st.session_state.get("workspace_mode") == "Admin Panel":
 
 st.session_state.setdefault("messages", [])
 st.session_state.setdefault("last_error", "")
-model = secret("GEMINI_MODEL", "gemini-flash-latest")
+chat_provider = st.sidebar.selectbox("AI Provider", list(MODELS), key="chat_provider")
+if chat_provider == "Meta / Llama (via Groq)":
+    st.sidebar.caption("Use a Groq key. Llama model access depends on your Groq account.")
+api_key = st.sidebar.text_input(f"{chat_provider} chat API key", type="password", key="chat_key_" + chat_provider).strip()
+if st.sidebar.button("Refresh model list", disabled=not api_key):
+    try:
+        st.session_state["models_" + chat_provider] = list_models(chat_provider, api_key)
+    except GeminiError as error:
+        st.sidebar.error(str(error))
+model_options = st.session_state.get("models_" + chat_provider, MODELS[chat_provider])
+model = st.sidebar.selectbox("AI model", model_options + ["Custom model ID"], key="model_" + chat_provider)
+if model == "Custom model ID":
+    model = st.sidebar.text_input("Enter model ID", key="custom_model_" + chat_provider).strip()
+chat_ready = bool(api_key and model)
+st.sidebar.caption("Switching providers sends the current conversation to the selected provider. Use New chat for a fresh conversation.")
 with st.sidebar.expander("AI settings", expanded=False):
     st.caption("Enter your own keys to enable AI features. Keys apply only to this session; blank fields keep the feature disabled.")
-    api_key = st.text_input("Gemini chat API key", type="password") .strip()
     voice_key = st.text_input("Gemini voice API key", type="password").strip()
     image_key = st.text_input("Gemini image API key", type="password").strip()
     cf_override = st.text_input("Cloudflare image API token", type="password").strip()
     cf_account_override = st.text_input("Cloudflare Account ID").strip()
     google_key = st.text_input("Google search API key", type="password").strip()
     pse_id = st.text_input("Google Search Engine ID", type="password").strip()
-    model = st.text_input("Gemini chat model ID", value=model).strip()
     image_model = st.text_input("Gemini image model ID", value=secret("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image")).strip()
-    voice_model = st.text_input("Gemini voice model ID", value=secret("GEMINI_VOICE_MODEL") or model).strip()
+    voice_model = st.text_input("Gemini voice model ID", value=secret("GEMINI_VOICE_MODEL") or "gemini-flash-latest").strip()
+    st.caption("Temperature applies to Gemini, Groq and GPT-4.1/4o. Other models use their default.")
     temperature = st.slider("Temperature", 0.0, 2.0, 0.8, 0.1)
     max_tokens = st.slider("Maximum response tokens", 50, 8192, 1024)
     st.caption("This limits response length, not daily API quota. Video generation and other research providers are not connected yet.")
@@ -120,7 +134,7 @@ with st.sidebar:
     use_search = st.toggle("Google web search", value=False, disabled=not google_ready,
                            help="The assistant searches when needed, up to 3 searches per turn.")
     st.caption("Google configured" if google_ready else "Google search is optional. See README for setup.")
-    st.caption("Gemini chat configured" if api_key else "Gemini chat key is not configured.")
+    st.caption(f"{chat_provider} chat configured" if chat_ready else "Enter a chat key and select a model.")
     st.divider()
     for tool_name in workspace_options:
         if st.button(tool_name, key="nav_" + tool_name, width="stretch", type="secondary"):
@@ -131,7 +145,7 @@ with st.sidebar:
         st.download_button("Download chat", transcript, file_name="chetan-chat.txt",
                            mime="text/plain", icon=":material/download:", width="stretch")
     st.caption("Your chat lasts for this browser session. Refreshing the page may reset it.")
-    st.caption("Your questions are sent to Google Gemini. When web search is enabled, search queries are also sent to Google.")
+    st.caption("Your questions are sent to the selected AI provider. When web search is enabled, search queries are also sent to Google.")
 
 st.html('<div class="brand">CHETAN AI</div>')
 tool_left, tool_center, tool_right = st.columns([2, 1.2, 2])
@@ -139,8 +153,8 @@ with tool_center:
     mode = st.selectbox("Workspace / Tools", workspace_options, key="workspace_mode")
 if mode == "Chat" and not st.session_state.messages:
     st.html('<div class="orb-stage"><div class="orb" role="img" aria-label="Colourful glowing AI orb"></div><div class="orb-label">Your idea. A new beginning.</div></div>')
-if mode == "Chat" and not api_key:
-    st.info("Open AI settings and enter your Gemini chat API key to start chatting.")
+if mode == "Chat" and not chat_ready:
+    st.info("Select an AI provider and model, then enter its API key in the sidebar to start chatting.")
 
 if mode in {"Voice", "PDF tools", "Text pad", "Calculator"}:
     show_tools(mode)
@@ -193,12 +207,12 @@ pending = bool(st.session_state.messages and st.session_state.messages[-1]["role
 retry = False
 if st.session_state.last_error:
     st.error(st.session_state.last_error)
-    retry = st.button("Try again", disabled=not api_key)
-voice_prompt = speech_input(voice_key, voice_model, disabled=not voice_key or not api_key or pending)
-prompt = st.chat_input("Type your question or idea here…", max_chars=8000, disabled=not api_key or pending)
+    retry = st.button("Try again", disabled=not chat_ready)
+voice_prompt = speech_input(voice_key, voice_model, disabled=not voice_key or not chat_ready or pending)
+prompt = st.chat_input("Type your question or idea here…", max_chars=8000, disabled=not chat_ready or pending)
 
 prompt = prompt or voice_prompt
-if (prompt or retry) and api_key:
+if (prompt or retry) and chat_ready:
     if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})
     st.session_state.last_error = ""
@@ -206,7 +220,7 @@ if (prompt or retry) and api_key:
         with st.spinner("Chetan AI is working…"):
             status = st.empty()
             search = (lambda query: google_search(query, google_key, pse_id)) if use_search else None
-            result = answer(api_key, model, st.session_state.messages, language, search, status.caption, temperature=temperature, max_tokens=max_tokens)
+            result = chat_answer(chat_provider, api_key, model, st.session_state.messages, language, search, status.caption, temperature=temperature, max_tokens=max_tokens)
             st.session_state.messages.append({"role": "assistant", **result})
     except GeminiError as error:
         st.session_state.last_error = str(error)

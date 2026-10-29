@@ -57,23 +57,26 @@ class Tests(unittest.TestCase):
     def app(self, key=''):
         app = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=15)
         app.secrets['GEMINI_API_KEY'] = key
-        return app.run()
+        app.run()
+        if key:
+            app.text_input(key='chat_key_Gemini').set_value(key).run()
+        return app
 
     def test_missing_key(self):
         app = self.app()
         self.assertFalse(app.exception)
         self.assertTrue(app.chat_input[0].disabled)
 
-    @patch('agent.answer')
+    @patch('providers.answer')
     def test_retry_and_reset(self, mocked):
         mocked.side_effect = [GeminiError('Quota limit'), {'content': 'Done', 'sources': [], 'warnings': []}]
         app = self.app('fake')
         app.chat_input[0].set_value('Hi').run()
         self.assertEqual(len(app.session_state['messages']), 1)
-        next(b for b in app.button if b.label == 'Dobara try karein').click().run()
+        next(b for b in app.button if b.label == 'Try again').click().run()
         self.assertFalse(app.exception)
         self.assertEqual(len(app.session_state['messages']), 2)
-        next(b for b in app.button if b.label == 'Nayi chat').click().run()
+        next(b for b in app.button if b.label == 'New chat').click().run()
         self.assertEqual(app.session_state['messages'], [])
 
 if __name__ == '__main__':
