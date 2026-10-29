@@ -90,10 +90,13 @@ if st.session_state.get("workspace_mode") == "Admin Panel":
 
 st.session_state.setdefault("messages", [])
 st.session_state.setdefault("last_error", "")
+st.sidebar.title("Settings")
 chat_provider = st.sidebar.selectbox("AI Provider", list(MODELS), key="chat_provider")
 if chat_provider == "Meta / Llama (via Groq)":
     st.sidebar.caption("Use a Groq key. Llama model access depends on your Groq account.")
 api_key = st.sidebar.text_input(f"{chat_provider} chat API key", type="password", key="chat_key_" + chat_provider).strip()
+if api_key == "YOUR_GEMINI_API_KEY":
+    api_key = ""
 if st.sidebar.button("Refresh model list", disabled=not api_key):
     try:
         st.session_state["models_" + chat_provider] = list_models(chat_provider, api_key)
@@ -104,6 +107,9 @@ model = st.sidebar.selectbox("AI model", model_options + ["Custom model ID"], ke
 if model == "Custom model ID":
     model = st.sidebar.text_input("Enter model ID", key="custom_model_" + chat_provider).strip()
 chat_ready = bool(api_key and model)
+temperature = st.sidebar.slider("Select Temperature", min_value=0.0, max_value=2.0, value=0.8, step=0.1)
+max_tokens = st.sidebar.slider("Select Max Tokens", min_value=50, max_value=200, value=100)
+st.sidebar.caption("Tokens limit response length, not daily API quota. A low limit can cut answers short. Temperature applies only to supported models.")
 st.sidebar.caption("Switching providers sends the current conversation to the selected provider. Use New chat for a fresh conversation.")
 with st.sidebar.expander("AI settings", expanded=False):
     st.caption("Enter your own keys to enable AI features. Keys apply only to this session; blank fields keep the feature disabled.")
@@ -116,8 +122,6 @@ with st.sidebar.expander("AI settings", expanded=False):
     image_model = st.text_input("Gemini image model ID", value=secret("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image")).strip()
     voice_model = st.text_input("Gemini voice model ID", value=secret("GEMINI_VOICE_MODEL") or "gemini-flash-latest").strip()
     st.caption("Temperature applies to Gemini, Groq and GPT-4.1/4o. Other models use their default.")
-    temperature = st.slider("Temperature", 0.0, 2.0, 0.8, 0.1)
-    max_tokens = st.slider("Maximum response tokens", 50, 8192, 1024)
     st.caption("This limits response length, not daily API quota. Video generation and other research providers are not connected yet.")
 google_ready = bool(google_key and pse_id)
 
