@@ -89,21 +89,16 @@ if st.session_state.get("workspace_mode") == "Admin Panel":
 
 st.session_state.setdefault("messages", [])
 st.session_state.setdefault("last_error", "")
-shared_key = secret("GEMINI_API_KEY")
-api_key = secret("GEMINI_CHAT_API_KEY") or shared_key
-voice_key = secret("GEMINI_VOICE_API_KEY") or shared_key
-image_key = secret("GEMINI_IMAGE_API_KEY") or shared_key
 model = secret("GEMINI_MODEL", "gemini-flash-latest")
-google_key, pse_id = secret("GOOGLE_API_KEY"), secret("GOOGLE_PSE_ID")
 with st.sidebar.expander("AI settings", expanded=False):
-    st.caption("Optional keys apply only to this browser session. Blank fields use server secrets.")
-    api_key = st.text_input("Gemini chat API key", type="password") .strip() or api_key
-    voice_key = st.text_input("Gemini voice API key", type="password").strip() or voice_key
-    image_key = st.text_input("Gemini image API key", type="password").strip() or image_key
+    st.caption("Enter your own keys to enable AI features. Keys apply only to this session; blank fields keep the feature disabled.")
+    api_key = st.text_input("Gemini chat API key", type="password") .strip()
+    voice_key = st.text_input("Gemini voice API key", type="password").strip()
+    image_key = st.text_input("Gemini image API key", type="password").strip()
     cf_override = st.text_input("Cloudflare image API token", type="password").strip()
     cf_account_override = st.text_input("Cloudflare Account ID").strip()
-    google_key = st.text_input("Google search API key", type="password").strip() or google_key
-    pse_id = st.text_input("Google Search Engine ID", type="password").strip() or pse_id
+    google_key = st.text_input("Google search API key", type="password").strip()
+    pse_id = st.text_input("Google Search Engine ID", type="password").strip()
     model = st.text_input("Gemini chat model ID", value=model).strip()
     image_model = st.text_input("Gemini image model ID", value=secret("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image")).strip()
     voice_model = st.text_input("Gemini voice model ID", value=secret("GEMINI_VOICE_MODEL") or model).strip()
@@ -145,7 +140,7 @@ with tool_center:
 if mode == "Chat" and not st.session_state.messages:
     st.html('<div class="orb-stage"><div class="orb" role="img" aria-label="Colourful glowing AI orb"></div><div class="orb-label">Your idea. A new beginning.</div></div>')
 if mode == "Chat" and not api_key:
-    st.info("Add GEMINI_CHAT_API_KEY or GEMINI_API_KEY to secrets to enable chat.")
+    st.info("Open AI settings and enter your Gemini chat API key to start chatting.")
 
 if mode in {"Voice", "PDF tools", "Text pad", "Calculator"}:
     show_tools(mode)
@@ -154,10 +149,10 @@ if mode == "Image Generator":
     st.subheader("Turn your ideas into images")
     st.caption("Describe a logo, illustration or photo, then select Create image.")
     provider = st.selectbox("Image provider", ["Cloudflare · FLUX", "Gemini"])
-    cf_token, cf_account = cf_override or secret("CLOUDFLARE_API_TOKEN"), cf_account_override or secret("CLOUDFLARE_ACCOUNT_ID")
+    cf_token, cf_account = cf_override, cf_account_override
     image_ready = bool(cf_token and cf_account) if provider.startswith("Cloudflare") else bool(image_key)
     if not image_ready:
-        st.info("Save CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in .streamlit/secrets.toml." if provider.startswith("Cloudflare") else "Save GEMINI_IMAGE_API_KEY or GEMINI_API_KEY in secrets.")
+        st.info("Enter your Cloudflare API token and Account ID in AI settings." if provider.startswith("Cloudflare") else "Enter your Gemini image API key in AI settings.")
     with st.form("image_form"):
         image_prompt = st.text_area("Describe your image", placeholder="A modern Chetan AI logo, purple neon colours, black background…", max_chars=4000, height=120)
         c1, c2 = st.columns(2)
@@ -167,7 +162,7 @@ if mode == "Image Generator":
             image_ratio = st.selectbox("Size", ["1:1"] if provider.startswith("Cloudflare") else ["1:1", "16:9", "9:16"])
         create = st.form_submit_button("Create image", type="primary", icon=":material/auto_awesome:", disabled=not image_ready, width="stretch")
     st.caption("Cloudflare has a limited free allowance. Check your usage dashboard. Gemini image billing is separate.")
-    if create:
+    if create and image_ready:
         try:
             with st.spinner("Creating your image…"):
                 if provider.startswith("Cloudflare"):
@@ -203,7 +198,7 @@ voice_prompt = speech_input(voice_key, voice_model, disabled=not voice_key or no
 prompt = st.chat_input("Type your question or idea here…", max_chars=8000, disabled=not api_key or pending)
 
 prompt = prompt or voice_prompt
-if prompt or retry:
+if (prompt or retry) and api_key:
     if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})
     st.session_state.last_error = ""
