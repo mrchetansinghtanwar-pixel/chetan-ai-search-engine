@@ -22,8 +22,13 @@ button[kind="primary"]{background:#208579;border-color:#208579;color:#fff}
 [data-testid="stChatInput"]{border:1px solid #93c5b9!important;border-radius:18px!important;background:#fff!important;box-shadow:0 5px 24px #254f3a08}
 [data-testid="stChatInput"]:focus-within{border-color:#208579!important;box-shadow:0 0 0 3px #20857915}
 [data-testid="stChatInput"] textarea{font-size:15px!important}
-.st-key-welcome_composer [data-testid="stChatInput"]{min-height:112px}
-.st-key-welcome_composer textarea{min-height:78px!important;padding-top:16px!important}
+.st-key-welcome_composer [data-testid="stChatInput"]{position:relative;min-height:76px;border-radius:28px!important;border-color:#d3dfd8!important;box-shadow:0 8px 30px #254f3a0d;background:#fff!important;transition:box-shadow .18s,border-color .18s}
+.st-key-welcome_composer [data-testid="stChatInput"]:hover{border-color:#9ebeb0!important;box-shadow:0 10px 32px #254f3a16}
+.st-key-welcome_composer [data-testid="stChatInput"]:focus-within{border-color:#208579!important;box-shadow:0 0 0 4px #20857912,0 8px 28px #254f3a0d}
+.st-key-welcome_composer [data-testid="stChatInput"]::before{content:"";position:absolute;left:22px;top:26px;width:14px;height:14px;border:2px solid #668b7d;border-radius:50%;pointer-events:none;z-index:1}
+.st-key-welcome_composer [data-testid="stChatInput"]::after{content:"";position:absolute;left:35px;top:40px;width:8px;height:2px;background:#668b7d;transform:rotate(45deg);transform-origin:left center;pointer-events:none;z-index:1}
+.st-key-welcome_composer textarea{min-height:46px!important;padding-top:12px!important;padding-left:46px!important;font-size:16px!important}
+.st-key-welcome_composer [data-testid="stChatInputSubmitButton"]{width:40px;height:40px;border-radius:50%!important;margin:3px}
 [data-testid="stChatInputSubmitButton"]{background:#208579!important;border-radius:10px!important;color:#fff!important}
 [data-testid="stChatInputSubmitButton"]:disabled{background:#d4e0db!important;color:#74877e!important}
 [data-testid="stBottom"]>div{background:linear-gradient(0deg,#fafbf9 70%,transparent)}
