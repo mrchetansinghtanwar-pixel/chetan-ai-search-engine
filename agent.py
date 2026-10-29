@@ -94,7 +94,7 @@ def google_search(query, api_key, pse_id):
 
 
 
-def answer(api_key, model, history, language, search=None, on_status=lambda text: None):
+def answer(api_key, model, history, language, search=None, on_status=lambda text: None, temperature=0.8, max_tokens=1024):
     instructions = (
         f'You are Chetan AI, a helpful assistant. Reply in {language} unless asked otherwise. '
         'Use google_search for current facts when available. Never claim to search unless '
@@ -115,7 +115,7 @@ def answer(api_key, model, history, language, search=None, on_status=lambda text
         payload = {
             'systemInstruction': {'parts': [{'text': instructions}]},
             'contents': contents,
-            'generationConfig': {'maxOutputTokens': 8192},
+            'generationConfig': {'maxOutputTokens': max(50, min(8192, int(max_tokens))), 'temperature': max(0.0, min(2.0, float(temperature)))},
         }
         if search:
             payload['tools'] = [{'functionDeclarations': [SEARCH_TOOL]}]

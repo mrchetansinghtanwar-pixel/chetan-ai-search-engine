@@ -95,6 +95,21 @@ voice_key = secret("GEMINI_VOICE_API_KEY") or shared_key
 image_key = secret("GEMINI_IMAGE_API_KEY") or shared_key
 model = secret("GEMINI_MODEL", "gemini-flash-latest")
 google_key, pse_id = secret("GOOGLE_API_KEY"), secret("GOOGLE_PSE_ID")
+with st.sidebar.expander("AI settings", expanded=False):
+    st.caption("Optional keys apply only to this browser session. Blank fields use server secrets.")
+    api_key = st.text_input("Gemini chat API key", type="password") .strip() or api_key
+    voice_key = st.text_input("Gemini voice API key", type="password").strip() or voice_key
+    image_key = st.text_input("Gemini image API key", type="password").strip() or image_key
+    cf_override = st.text_input("Cloudflare image API token", type="password").strip()
+    cf_account_override = st.text_input("Cloudflare Account ID").strip()
+    google_key = st.text_input("Google search API key", type="password").strip() or google_key
+    pse_id = st.text_input("Google Search Engine ID", type="password").strip() or pse_id
+    model = st.text_input("Gemini chat model ID", value=model).strip()
+    image_model = st.text_input("Gemini image model ID", value=secret("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image")).strip()
+    voice_model = st.text_input("Gemini voice model ID", value=secret("GEMINI_VOICE_MODEL") or model).strip()
+    temperature = st.slider("Temperature", 0.0, 2.0, 0.8, 0.1)
+    max_tokens = st.slider("Maximum response tokens", 50, 8192, 1024)
+    st.caption("This limits response length, not daily API quota. Video generation and other research providers are not connected yet.")
 google_ready = bool(google_key and pse_id)
 
 with st.sidebar:
@@ -139,7 +154,7 @@ if mode == "Image Generator":
     st.subheader("Turn your ideas into images")
     st.caption("Describe a logo, illustration or photo, then select Create image.")
     provider = st.selectbox("Image provider", ["Cloudflare · FLUX", "Gemini"])
-    cf_token, cf_account = secret("CLOUDFLARE_API_TOKEN"), secret("CLOUDFLARE_ACCOUNT_ID")
+    cf_token, cf_account = cf_override or secret("CLOUDFLARE_API_TOKEN"), cf_account_override or secret("CLOUDFLARE_ACCOUNT_ID")
     image_ready = bool(cf_token and cf_account) if provider.startswith("Cloudflare") else bool(image_key)
     if not image_ready:
         st.info("Save CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in .streamlit/secrets.toml." if provider.startswith("Cloudflare") else "Save GEMINI_IMAGE_API_KEY or GEMINI_API_KEY in secrets.")
@@ -158,7 +173,7 @@ if mode == "Image Generator":
                 if provider.startswith("Cloudflare"):
                     result = create_cloudflare_image(cf_token, cf_account, image_prompt, image_style)
                 else:
-                    result = create_image(image_key, secret("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image"), image_prompt, image_style, image_ratio)
+                    result = create_image(image_key, image_model, image_prompt, image_style, image_ratio)
                 st.session_state.image_result = result
         except GeminiError as error:
             st.error(str(error))
@@ -184,7 +199,7 @@ retry = False
 if st.session_state.last_error:
     st.error(st.session_state.last_error)
     retry = st.button("Try again", disabled=not api_key)
-voice_prompt = speech_input(voice_key, secret("GEMINI_VOICE_MODEL") or model, disabled=not voice_key or not api_key or pending)
+voice_prompt = speech_input(voice_key, voice_model, disabled=not voice_key or not api_key or pending)
 prompt = st.chat_input("Type your question or idea here…", max_chars=8000, disabled=not api_key or pending)
 
 prompt = prompt or voice_prompt
@@ -196,7 +211,7 @@ if prompt or retry:
         with st.spinner("Chetan AI is working…"):
             status = st.empty()
             search = (lambda query: google_search(query, google_key, pse_id)) if use_search else None
-            result = answer(api_key, model, st.session_state.messages, language, search, status.caption)
+            result = answer(api_key, model, st.session_state.messages, language, search, status.caption, temperature=temperature, max_tokens=max_tokens)
             st.session_state.messages.append({"role": "assistant", **result})
     except GeminiError as error:
         st.session_state.last_error = str(error)
