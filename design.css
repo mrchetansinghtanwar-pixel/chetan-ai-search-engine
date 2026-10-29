@@ -1,0 +1,34 @@
+<style>
+/* Reference: user's Perplexity UI folder; controls remain native Streamlit. */
+::selection{background:#bce9e2;color:#153b37}
+.stApp{background:#fafbf9;color:#25332f}
+[data-testid="stHeader"]{background:transparent}
+[data-testid="stMainBlockContainer"]{max-width:920px;padding-top:2rem;padding-bottom:5rem}
+[data-testid="stSidebar"]{background:#f1f4f1;border-right:1px solid #e0e6e1}
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"]{gap:.65rem}
+[data-testid="stSidebar"] h1{font-size:1.4rem;letter-spacing:-.6px}
+[data-testid="stCaptionContainer"]{color:#64746e}
+[data-testid="stButton"] button{border-radius:12px;min-height:40px;transition:border-color .15s,background .15s}
+[data-testid="stButton"] button:hover{border-color:#299b8e;background:#edf7f4;color:#176e63}
+button[kind="primary"]{background:#208579;border-color:#208579;color:#fff}
+.brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:650;letter-spacing:-.4px;padding-bottom:20px;border-bottom:1px solid #e4e9e4;margin-bottom:16px}
+.brand-mark{color:#208579;font-size:26px}
+.brand-note{margin-left:auto;font-size:11px;letter-spacing:.3px;color:#738079;font-weight:400}
+.welcome{text-align:center;padding:clamp(32px,8vh,82px) 0 20px}
+.welcome h1{font-size:clamp(34px,5vw,48px);font-weight:650;letter-spacing:-2px;line-height:1.2;margin:0;color:#273631}
+.byok-badge{display:inline-block;vertical-align:middle;background:#208579;border-radius:20px;padding:5px 9px;font-size:10px;letter-spacing:.8px;color:#fff;line-height:1.2}
+.welcome p{color:#728079;font-size:15px;margin:14px 0 0}
+[data-testid="stChatMessage"]{background:#fff;border:1px solid #e1e7e2;border-radius:16px;padding:22px;margin-bottom:14px}
+[data-testid="stChatInput"]{border:1px solid #93c5b9!important;border-radius:18px!important;background:#fff!important;box-shadow:0 5px 24px #254f3a08}
+[data-testid="stChatInput"]:focus-within{border-color:#208579!important;box-shadow:0 0 0 3px #20857915}
+[data-testid="stChatInput"] textarea{font-size:15px!important}
+.st-key-welcome_composer [data-testid="stChatInput"]{min-height:112px}
+.st-key-welcome_composer textarea{min-height:78px!important;padding-top:16px!important}
+[data-testid="stChatInputSubmitButton"]{background:#208579!important;border-radius:10px!important;color:#fff!important}
+[data-testid="stChatInputSubmitButton"]:disabled{background:#d4e0db!important;color:#74877e!important}
+[data-testid="stBottom"]>div{background:linear-gradient(0deg,#fafbf9 70%,transparent)}
+[data-testid="stExpander"]{border-color:#dee5df;border-radius:12px}
+[data-testid="stAlert"]{border-radius:12px}
+@media(max-width:600px){[data-testid="stMainBlockContainer"]{padding-top:1.5rem;padding-left:1rem;padding-right:1rem}.brand-note{display:none}.welcome{padding-top:24px}.welcome h1{letter-spacing:-1.4px}.welcome p{font-size:14px}[data-testid="stChatMessage"]{padding:14px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>

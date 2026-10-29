@@ -1,11 +1,11 @@
 [theme]
-base = "dark"
-primaryColor = "#973AE8"
-backgroundColor = "#080709"
-secondaryBackgroundColor = "#151118"
-textColor = "#F7F3FA"
-linkColor = "#B9AEFF"
-borderColor = "#302633"
+base = "light"
+primaryColor = "#208579"
+backgroundColor = "#FAFBF9"
+secondaryBackgroundColor = "#F1F4F1"
+textColor = "#25332F"
+linkColor = "#167568"
+borderColor = "#DEE5DF"
 baseRadius = "12px"
 buttonRadius = "10px"
 showWidgetBorder = true
@@ -15,8 +15,8 @@ headingFontSizes = ["36px", "26px", "20px"]
 paddingTop = "2rem"
 
 [theme.sidebar]
-backgroundColor = "#100D14"
-secondaryBackgroundColor = "#1C1522"
+backgroundColor = "#F1F4F1"
+secondaryBackgroundColor = "#FFFFFF"
 
 [browser]
 gatherUsageStats = false

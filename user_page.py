@@ -13,49 +13,7 @@ from speech_input import speech_input
 st.set_page_config(page_title="Chetan AI • Search & chat", page_icon=":material/auto_awesome:", layout="centered", initial_sidebar_state="expanded")
 
 
-st.html("""<style>
-::selection{background:#6055d9;color:white}
-.stApp{background:#020203;color:#e9e8f4}
-.stApp:before,.stApp:after{content:"";position:fixed;top:0;bottom:0;width:7vw;pointer-events:none;z-index:0;background:repeating-linear-gradient(155deg,transparent 0%,#171347 16%,#655bdd 18%,#110f32 21%,#020205 28%,#353487 44%,#a89af5 48%,#24205d 54%,#090817 65%);opacity:.72}
-.stApp:before{left:0}.stApp:after{right:0;transform:scaleX(-1)}
-[data-testid="stHeader"]{background:transparent}
-[data-testid="stMainBlockContainer"]{max-width:900px;padding-top:2rem;padding-bottom:7rem;position:relative}
-[data-testid="stSidebar"]{background:#0c0c13;border-right:1px solid #252436}
-.brand{font-size:17px;font-weight:600;letter-spacing:.5px;color:#b9b8cd;text-align:center;margin-bottom:18px}
-.orb-stage{height:53vh;min-height:280px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:26px}
-.orb{position:relative;width:190px;height:190px;border-radius:50%;overflow:hidden;background:radial-gradient(ellipse at 24% 72%,#ff403e 0%,#f82135 10%,transparent 36%),radial-gradient(ellipse at 73% 30%,#6846ff 0%,#3c13f6 18%,transparent 44%),radial-gradient(ellipse at 65% 77%,#00daed 0%,#006382 18%,transparent 42%),radial-gradient(ellipse at 30% 22%,#264997,transparent 38%),#080716;box-shadow:inset 0 0 13px #c6b2fb,inset 4px -5px 8px #96a3ca,0 0 2px 2px #675d89,0 0 40px #35267935;animation:breathe 7s ease-in-out infinite}
-.orb:after{content:"";position:absolute;inset:4px;border-radius:50%;background:radial-gradient(ellipse at 50% 50%,#02020d99 8%,transparent 66%);border:1px solid #becbff66;box-shadow:inset -7px -3px 12px #d8d1ff55}
-.orb-label{color:#7d7c90;font-size:13px;letter-spacing:1px}
-@keyframes breathe{50%{transform:scale(1.045);filter:hue-rotate(18deg);box-shadow:inset 0 0 16px #c6b2fb,0 0 48px #4938a544}}
-@media(prefers-reduced-motion:reduce){.orb{animation:none}}
-[data-testid="stChatInput"]{border:1px solid #282632!important;border-radius:36px!important;background:#101017!important;box-shadow:0 5px 25px #000;max-width:680px;margin:auto}
-[data-testid="stChatInput"] textarea{font-size:15px!important}
-[data-testid="stChatInputSubmitButton"]{border-radius:50%!important;background:#554ce6!important;color:white!important}
-[data-testid="stBottom"]>div{background:#020203}
-[data-testid="stChatMessage"]{background:#101018;border:1px solid #242331;border-radius:22px}
-[data-testid="stButton"] button{border-radius:18px}
-button[kind="primary"]{background:#554ce6;border:0}
-@media(max-width:600px){.stApp:before,.stApp:after{width:3vw}.orb{width:155px;height:155px}.orb-stage{height:46vh}}
-
-/* Approved Canva composition */
-.stApp{background:radial-gradient(ellipse at 56% 43%,#111329 0%,#06060d 31%,#030306 64%)}
-.stApp:before{display:none}
-.stApp:after{width:4vw;right:0;opacity:.6;background:linear-gradient(100deg,transparent 25%,#10122e 45%,#554488 55%,#151435 62%,#695bea 65%,#040408 74%);transform:skewX(-9deg)}
-[data-testid="stSidebar"]{min-width:210px!important;width:210px!important;background:#090910;border-right:1px solid #191825}
-[data-testid="stSidebar"] [data-testid="stVerticalBlock"]{gap:.6rem}
-[data-testid="stSidebar"] [data-testid="stButton"] button{min-height:34px;font-size:12px;text-align:left;background:#14131f;border:1px solid #252237;border-radius:9px}
-[data-testid="stSidebar"] [data-testid="stCaptionContainer"]{font-size:11px;color:#858198}
-[data-testid="stMainBlockContainer"]{max-width:1100px;padding-top:1rem}
-.brand{font-family:monospace;font-size:12px;letter-spacing:5px;color:#e3def3;margin:0 0 32px;text-align:center}
-.orb-stage{height:48vh;min-height:260px;gap:32px;justify-content:flex-start;padding-top:24px}
-.orb{width:225px;height:225px;background:linear-gradient(145deg,transparent 36%,#568cff55 39%,#7883ff99 42%,#5b55ed55 45%,transparent 51%),radial-gradient(ellipse at 30% 22%,#52bcdf 0%,transparent 30%),radial-gradient(ellipse at 72% 75%,#e41466 0%,#6d155a 20%,transparent 45%),radial-gradient(ellipse at 36% 65%,#415bff 0%,transparent 45%),radial-gradient(ellipse at 75% 25%,#733bc3,transparent 48%),#16445b;box-shadow:inset 0 0 18px #b2a8fc66,0 0 1px 1px #8e9ce3,0 0 65px #4755ba33}
-.orb:after{border-color:#c4eaff55;box-shadow:inset 0 0 20px #10102688;background:radial-gradient(ellipse at 30% 24%,#bdeeff77,transparent 9%)}
-.orb-label{font-size:12px;color:#ccc5e0;letter-spacing:0}
-[data-testid="stChatInput"]{max-width:680px;background:#1d192c!important;border-color:#3a314e!important;border-radius:40px!important}
-[data-testid="stChatInputSubmitButton"]{background:#9873f4!important}
-[data-testid="stBottom"]>div{background:transparent}
-@media(max-width:600px){.orb{width:175px;height:175px}.brand{margin-bottom:15px}.orb-stage{height:44vh}[data-testid="stMainBlockContainer"]{padding-top:1rem}}
-</style>""")
+st.html((Path(__file__).parent / "design.css").read_text(encoding="utf-8"))
 
 
 def secret(name, default=""):
@@ -98,39 +56,47 @@ if expire_credentials(st.session_state):
     st.info("Credentials cleared after 30 minutes without interaction. Enter your key again.")
 st.session_state.setdefault("messages", [])
 st.session_state.setdefault("last_error", "")
-st.sidebar.title("Settings")
-st.sidebar.info("Bring your own key · Requests use your provider account's credits and quota. Chetan AI does not supply paid chatbot credits. No registration required.")
-st.sidebar.button("Disconnect / Clear credentials", on_click=disconnect, args=(st.session_state,), width="stretch")
-chat_provider = st.sidebar.selectbox("AI Provider", list(MODELS), key="chat_provider")
-if chat_provider == "Meta / Llama (via Groq)":
-    st.sidebar.caption("Use a Groq key. Llama model access depends on your Groq account.")
-api_key = st.sidebar.text_input(f"{chat_provider} chat API key", type="password", key="chat_key_" + chat_provider).strip()
-if api_key == "YOUR_GEMINI_API_KEY":
-    api_key = ""
-if st.sidebar.button("Check API connection", disabled=not api_key):
-    try:
-        list_models(chat_provider, api_key)
-        st.session_state['verified_provider'] = chat_provider
-        st.sidebar.success("Provider accepted the key. Model access and credits are checked on each request.")
-    except GeminiError as error:
-        st.session_state.pop('verified_provider', None)
-        st.sidebar.error(str(error))
-st.sidebar.caption("Key entered · ready to request" if api_key else "Disconnected · enter your API key")
-if st.sidebar.button("Refresh model list", disabled=not api_key):
-    try:
-        st.session_state["models_" + chat_provider] = list_models(chat_provider, api_key)
-    except GeminiError as error:
-        st.sidebar.error(str(error))
-model_options = st.session_state.get("models_" + chat_provider, MODELS[chat_provider])
-model = st.sidebar.selectbox("AI model", model_options + ["Custom model ID"], key="model_" + chat_provider)
-if model == "Custom model ID":
-    model = st.sidebar.text_input("Enter model ID", key="custom_model_" + chat_provider).strip()
-chat_ready = bool(api_key and model)
-stream_enabled = st.sidebar.toggle("Stream responses", value=True, help="Gemini/OpenAI chat streams when Google search is off. Search agents and other tools keep their existing response flow.")
-temperature = st.sidebar.slider("Select Temperature", min_value=0.0, max_value=2.0, value=0.8, step=0.1)
-max_tokens = st.sidebar.slider("Select Max Tokens", min_value=50, max_value=200, value=100)
-st.sidebar.caption("Tokens limit response length, not daily API quota. A low limit can cut answers short. Temperature applies only to supported models.")
-st.sidebar.caption("Switching providers sends the current conversation to the selected provider. Use New chat for a fresh conversation.")
+st.sidebar.title("Chetan AI")
+st.sidebar.caption("SEARCH · CREATE · EXPLORE")
+with st.sidebar.expander("Workspace", expanded=False):
+    for tool_name in workspace_options:
+        if st.button(tool_name, key="nav_" + tool_name, width="stretch"):
+            st.session_state.workspace_mode = tool_name
+            st.rerun()
+st.sidebar.caption("Your key. Your quota. No sign-up required. AI usage is billed by your provider.")
+with st.sidebar.expander("AI connection", expanded=True):
+    chat_provider = st.selectbox("AI Provider", list(MODELS), key="chat_provider")
+    if chat_provider == "Meta / Llama (via Groq)":
+        st.caption("Use a Groq key. Llama model access depends on your Groq account.")
+    api_key = st.text_input(f"{chat_provider} chat API key", type="password", key="chat_key_" + chat_provider).strip()
+    if api_key == "YOUR_GEMINI_API_KEY":
+        api_key = ""
+    if st.button("Check API connection", disabled=not api_key):
+        try:
+            list_models(chat_provider, api_key)
+            st.session_state['verified_provider'] = chat_provider
+            st.success("Provider accepted the key. Model access and credits are checked on each request.")
+        except GeminiError as error:
+            st.session_state.pop('verified_provider', None)
+            st.error(str(error))
+    st.caption("Key entered · ready to request" if api_key else "Disconnected · enter your API key")
+    st.button("Disconnect / Clear credentials", on_click=disconnect, args=(st.session_state,), width="stretch")
+    if st.button("Refresh model list", disabled=not api_key):
+        try:
+            st.session_state["models_" + chat_provider] = list_models(chat_provider, api_key)
+        except GeminiError as error:
+            st.error(str(error))
+    model_options = st.session_state.get("models_" + chat_provider, MODELS[chat_provider])
+    model = st.selectbox("AI model", model_options + ["Custom model ID"], key="model_" + chat_provider)
+    if model == "Custom model ID":
+        model = st.text_input("Enter model ID", key="custom_model_" + chat_provider).strip()
+    chat_ready = bool(api_key and model)
+with st.sidebar.expander("Response settings", expanded=False):
+    stream_enabled = st.toggle("Stream responses", value=True, help="Gemini/OpenAI chat streams when Google search is off. Search agents and other tools keep their existing response flow.")
+    temperature = st.slider("Select Temperature", min_value=0.0, max_value=2.0, value=0.8, step=0.1)
+    max_tokens = st.slider("Select Max Tokens", min_value=50, max_value=200, value=100)
+    st.caption("Tokens limit response length, not daily API quota. A low limit can cut answers short. Temperature applies only to supported models.")
+    st.caption("Switching providers sends the current conversation to the selected provider. Use Clear Chat for a fresh conversation.")
 with st.sidebar.expander("AI settings", expanded=False):
     st.caption("Enter your own keys to enable AI features. Keys apply only to this session; blank fields keep the feature disabled.")
     voice_key = st.text_input("Gemini voice API key", type="password", key="credential_voice").strip()
@@ -162,10 +128,6 @@ with st.sidebar:
     st.caption("Google configured" if google_ready else "Google search is optional. See README for setup.")
     st.caption(f"{chat_provider} chat configured" if chat_ready else "Enter a chat key and select a model.")
     st.divider()
-    for tool_name in workspace_options:
-        if st.button(tool_name, key="nav_" + tool_name, width="stretch", type="secondary"):
-            st.session_state.workspace_mode = tool_name
-            st.rerun()
     if st.session_state.messages:
         transcript = "\n\n".join(f"{m['role'].upper()}\n{m['content']}" for m in st.session_state.messages)
         st.download_button("Download chat", transcript, file_name="chetan-chat.txt",
@@ -173,14 +135,21 @@ with st.sidebar:
     st.caption("Your chat lasts for this browser session. Refreshing the page may reset it.")
     st.caption("Your questions are sent to the selected AI provider. When web search is enabled, search queries are also sent to Google.")
 
-st.html('<div class="brand">CHETAN AI</div>')
-tool_left, tool_center, tool_right = st.columns([2, 1.2, 2])
+st.html('<div class="brand"><span class="brand-mark">✳</span>Chetan AI<span class="brand-note">Your everyday AI workspace</span></div>')
+tool_left, tool_center, tool_right = st.columns([1, 2, 1])
 with tool_center:
     mode = st.selectbox("Workspace / Tools", workspace_options, key="workspace_mode")
+welcome_composer = None
 if mode == "Chat" and not st.session_state.messages:
-    st.html('<div class="orb-stage"><div class="orb" role="img" aria-label="Colourful glowing AI orb"></div><div class="orb-label">Your idea. A new beginning.</div></div>')
+    st.html('<div class="welcome"><h1>chetan ai <span class="byok-badge">BYOK</span></h1><p>Where curiosity becomes clarity.</p></div>')
+    welcome_composer = st.container(key="welcome_composer")
+    def open_workspace(target):
+        st.session_state.workspace_mode = target
+    for col, label, target, icon in zip(st.columns(3), ["Ask your PDF", "Create an image", "Convert a file"], ["Chat with PDF", "Image Generator", "PDF tools"], [":material/description:", ":material/auto_awesome:", ":material/picture_as_pdf:"]):
+        with col:
+            st.button(label, icon=icon, width="stretch", on_click=open_workspace, args=(target,))
 if mode == "Chat" and not chat_ready:
-    st.info("Select an AI provider and model, then enter its API key in the sidebar to start chatting.")
+    st.caption("Connect your API key in the sidebar to start. Your key, your quota — no sign-up required.")
 
 if mode == "Chat with PDF":
     from pdf_chat import pdf_chat_ui
@@ -239,7 +208,11 @@ if st.session_state.last_error:
     st.error(st.session_state.last_error)
     retry = st.button("Try again", disabled=not chat_ready)
 voice_prompt = speech_input(voice_key, voice_model, disabled=not voice_key or not chat_ready or pending)
-prompt = st.chat_input("Type your question or idea here…", max_chars=8000, disabled=not chat_ready or pending)
+if welcome_composer is not None:
+    with welcome_composer:
+        prompt = st.chat_input("Ask anything…", max_chars=8000, disabled=not chat_ready or pending)
+else:
+    prompt = st.chat_input("Ask a follow-up…", max_chars=8000, disabled=not chat_ready or pending)
 
 prompt = prompt or voice_prompt
 if (prompt or retry) and chat_ready:
