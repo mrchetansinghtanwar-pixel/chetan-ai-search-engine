@@ -71,12 +71,13 @@ class Tests(unittest.TestCase):
     def test_retry_and_reset(self, mocked):
         mocked.side_effect = [GeminiError('Quota limit'), {'content': 'Done', 'sources': [], 'warnings': []}]
         app = self.app('fake')
+        next(t for t in app.toggle if t.label == 'Stream responses').set_value(False).run()
         app.chat_input[0].set_value('Hi').run()
         self.assertEqual(len(app.session_state['messages']), 1)
         next(b for b in app.button if b.label == 'Try again').click().run()
         self.assertFalse(app.exception)
         self.assertEqual(len(app.session_state['messages']), 2)
-        next(b for b in app.button if b.label == 'New chat').click().run()
+        next(b for b in app.button if b.label == 'Clear Chat').click().run()
         self.assertEqual(app.session_state['messages'], [])
 
 if __name__ == '__main__':

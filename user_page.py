@@ -4,6 +4,8 @@ import tomllib
 import streamlit as st
 from agent import google_search, GeminiError
 from providers import MODELS, list_models, chat_answer
+from byok import disconnect, expire_credentials, redact
+from chat_stream import stream_chat
 from image_service import create_image, create_cloudflare_image
 from utilities import show_tools
 from speech_input import speech_input
@@ -74,6 +76,10 @@ def secret(name, default=""):
 
 def render_reply(message):
     st.markdown(message["content"])
+    if message["role"] == "assistant":
+        with st.expander("Copy response"):
+            st.caption("Use the copy button in the top-right corner below.")
+            st.code(message["content"], language=None, wrap_lines=True)
     for warning in message.get("warnings", []):
         st.warning(warning)
     if message.get("sources"):
@@ -88,15 +94,28 @@ workspace_options = ["Chat", "Chat with PDF", "Image Generator", "Voice", "PDF t
 if st.session_state.get("workspace_mode") == "Admin Panel":
     st.session_state.workspace_mode = "Chat"
 
+if expire_credentials(st.session_state):
+    st.info("Credentials cleared after 30 minutes without interaction. Enter your key again.")
 st.session_state.setdefault("messages", [])
 st.session_state.setdefault("last_error", "")
 st.sidebar.title("Settings")
+st.sidebar.info("Bring your own key · Requests use your provider account's credits and quota. Chetan AI does not supply paid chatbot credits. No registration required.")
+st.sidebar.button("Disconnect / Clear credentials", on_click=disconnect, args=(st.session_state,), width="stretch")
 chat_provider = st.sidebar.selectbox("AI Provider", list(MODELS), key="chat_provider")
 if chat_provider == "Meta / Llama (via Groq)":
     st.sidebar.caption("Use a Groq key. Llama model access depends on your Groq account.")
 api_key = st.sidebar.text_input(f"{chat_provider} chat API key", type="password", key="chat_key_" + chat_provider).strip()
 if api_key == "YOUR_GEMINI_API_KEY":
     api_key = ""
+if st.sidebar.button("Check API connection", disabled=not api_key):
+    try:
+        list_models(chat_provider, api_key)
+        st.session_state['verified_provider'] = chat_provider
+        st.sidebar.success("Provider accepted the key. Model access and credits are checked on each request.")
+    except GeminiError as error:
+        st.session_state.pop('verified_provider', None)
+        st.sidebar.error(str(error))
+st.sidebar.caption("Key entered · ready to request" if api_key else "Disconnected · enter your API key")
 if st.sidebar.button("Refresh model list", disabled=not api_key):
     try:
         st.session_state["models_" + chat_provider] = list_models(chat_provider, api_key)
@@ -107,26 +126,29 @@ model = st.sidebar.selectbox("AI model", model_options + ["Custom model ID"], ke
 if model == "Custom model ID":
     model = st.sidebar.text_input("Enter model ID", key="custom_model_" + chat_provider).strip()
 chat_ready = bool(api_key and model)
+stream_enabled = st.sidebar.toggle("Stream responses", value=True, help="Gemini/OpenAI chat streams when Google search is off. Search agents and other tools keep their existing response flow.")
 temperature = st.sidebar.slider("Select Temperature", min_value=0.0, max_value=2.0, value=0.8, step=0.1)
 max_tokens = st.sidebar.slider("Select Max Tokens", min_value=50, max_value=200, value=100)
 st.sidebar.caption("Tokens limit response length, not daily API quota. A low limit can cut answers short. Temperature applies only to supported models.")
 st.sidebar.caption("Switching providers sends the current conversation to the selected provider. Use New chat for a fresh conversation.")
 with st.sidebar.expander("AI settings", expanded=False):
     st.caption("Enter your own keys to enable AI features. Keys apply only to this session; blank fields keep the feature disabled.")
-    voice_key = st.text_input("Gemini voice API key", type="password").strip()
-    image_key = st.text_input("Gemini image API key", type="password").strip()
-    cf_override = st.text_input("Cloudflare image API token", type="password").strip()
-    cf_account_override = st.text_input("Cloudflare Account ID").strip()
-    google_key = st.text_input("Google search API key", type="password").strip()
-    pse_id = st.text_input("Google Search Engine ID", type="password").strip()
+    voice_key = st.text_input("Gemini voice API key", type="password", key="credential_voice").strip()
+    image_key = st.text_input("Gemini image API key", type="password", key="credential_image").strip()
+    cf_override = st.text_input("Cloudflare image API token", type="password", key="credential_cloudflare").strip()
+    cf_account_override = st.text_input("Cloudflare Account ID", key="credential_cf_account").strip()
+    google_key = st.text_input("Google search API key", type="password", key="credential_search").strip()
+    pse_id = st.text_input("Google Search Engine ID", type="password", key="credential_pse").strip()
     image_model = st.text_input("Gemini image model ID", value=secret("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image")).strip()
     voice_model = st.text_input("Gemini voice model ID", value=secret("GEMINI_VOICE_MODEL") or "gemini-flash-latest").strip()
     st.caption("Temperature applies to Gemini, Groq and GPT-4.1/4o. Other models use their default.")
     st.caption("This limits response length, not daily API quota. Video generation and other research providers are not connected yet.")
 google_ready = bool(google_key and pse_id)
+with st.sidebar.expander("API key privacy"):
+    st.caption("Password fields mask the display; keys still exist temporarily in this browser's widget and this session's server memory. They are not saved by the app to files, databases, cookies or local storage. Disconnect clears credential fields and chat/PDF state. Inactivity expires credentials on the next interaction after 30 minutes. This is not guaranteed memory erasure; the hosting operator controls the server. Use trusted HTTPS deployments and restricted, revocable keys.")
 
 with st.sidebar:
-    if st.button("New chat", icon=":material/add:", width="stretch", type="primary"):
+    if st.button("Clear Chat", icon=":material/add:", width="stretch", type="primary"):
         st.session_state.messages = []
         st.session_state.last_error = ""
         st.rerun()
@@ -222,13 +244,25 @@ prompt = st.chat_input("Type your question or idea here…", max_chars=8000, dis
 prompt = prompt or voice_prompt
 if (prompt or retry) and chat_ready:
     if prompt:
-        st.session_state.messages.append({"role": "user", "content": prompt})
+        st.session_state.messages.append({"role": "user", "content": redact(prompt, st.session_state)})
+        st.session_state.messages = st.session_state.messages[-40:]
     st.session_state.last_error = ""
     try:
         with st.spinner("Chetan AI is working…"):
             status = st.empty()
             search = (lambda query: google_search(query, google_key, pse_id)) if use_search else None
-            result = chat_answer(chat_provider, api_key, model, st.session_state.messages, language, search, status.caption, temperature=temperature, max_tokens=max_tokens)
+            if stream_enabled and chat_provider in {"Gemini", "OpenAI"} and not search:
+                with st.chat_message("assistant"):
+                    live = st.empty()
+                    try:
+                        result = stream_chat(chat_provider, api_key, model, st.session_state.messages, language, temperature, max_tokens,
+                                             lambda text: live.markdown(redact(text, st.session_state)))
+                    except Exception:
+                        live.empty()
+                        raise
+            else:
+                result = chat_answer(chat_provider, api_key, model, st.session_state.messages, language, search, status.caption, temperature=temperature, max_tokens=max_tokens)
+            result['content'] = redact(result['content'], st.session_state)
             st.session_state.messages.append({"role": "assistant", **result})
     except GeminiError as error:
         st.session_state.last_error = str(error)

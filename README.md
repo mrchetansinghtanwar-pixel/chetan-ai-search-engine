@@ -110,6 +110,9 @@ Chat current browser session mein rehti hai, permanent database mein nahi. Refre
 7 mocked tests pass: chat, search round trip/signatures, search budget, sanitized HTTP errors, blocked response, missing key, retry/reset. Real paid/free API requests tests mein nahi chalte. Live API verification apni private nayi key configure karne ke baad karein.
 # Chat with PDF (LangChain)
 
+For session-only credentials, billing, streaming, HTTPS deployment and security
+limitations, see [BYOK_SECURITY.md](BYOK_SECURITY.md).
+
 Choose **Chat with PDF** from Workspace / Tools. Upload an unlocked, text-based
 PDF (10 MB, 100 pages, 500,000 extracted characters maximum), select a chat
 provider/model and enter your session API key. Ask a specific question using

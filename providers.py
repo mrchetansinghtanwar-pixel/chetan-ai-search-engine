@@ -1,10 +1,11 @@
 """Session-key-only chat provider routing."""
 import json
 import requests
+from api_errors import error_message
 from agent import answer, GeminiError
 
 MODELS = {
-    'Gemini': ['gemini-flash-latest', 'gemini-pro-latest'],
+    'Gemini': ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-pro-latest'],
     'OpenAI': ['gpt-4.1-mini', 'gpt-4.1'],
     'Groq': ['openai/gpt-oss-20b', 'openai/gpt-oss-120b'],
     'Meta / Llama (via Groq)': ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'],
@@ -25,18 +26,22 @@ def request(provider, key, path, payload=None):
         headers = {'x-goog-api-key': key}
     try:
         response = requests.request('GET' if payload is None else 'POST', BASES[provider] + path,
-                                    headers=headers, json=payload, timeout=(10, 90))
+                                    headers=headers, json=payload, timeout=(10, 90), allow_redirects=False)
         if response.status_code != 200:
-            detail = {400: 'Check the model ID and settings.', 401: 'Check your API key.',
-                      403: 'Check model access and key permissions.', 404: 'Refresh the model list.',
-                      429: 'Quota or rate limit reached. Check billing or try later.'}.get(response.status_code, 'Try again later.')
-            raise GeminiError(f'{provider} request failed (HTTP {response.status_code}). {detail}')
+            raise GeminiError(error_message(provider, response))
         data = response.json()
         if not isinstance(data, dict):
             raise ValueError
         return data
-    except (requests.RequestException, ValueError):
-        raise GeminiError(f'{provider} connection failed or returned an invalid response.') from None
+    except requests.Timeout:
+        raise GeminiError(f'{provider}: Request timed out. Try a shorter request.') from None
+    except requests.RequestException:
+        raise GeminiError(f'{provider}: Network connection failed. Please try again.') from None
+    except ValueError:
+        raise GeminiError(f'{provider}: Invalid service response. Please try again.') from None
+    finally:
+        if 'response' in locals():
+            response.close()
 
 def list_models(provider, key):
     data = request(provider, key, '/models')
