@@ -42,6 +42,7 @@ class Providers(unittest.TestCase):
     def test_switch_provider_and_custom_model(self):
         app = AppTest.from_file(str(Path(__file__).resolve().parents[1] / 'app.py')).run()
         self.assertFalse(app.exception)
+        app.selectbox(key='chat_provider').select('Gemini').run()
         app.text_input(key='chat_key_Gemini').set_value('fake').run()
         self.assertFalse(app.chat_input[0].disabled)
         app.selectbox(key='chat_provider').select('OpenAI').run()

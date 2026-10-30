@@ -48,6 +48,15 @@ The owner still pays any hosting costs and independently configured services.
 
 ## Chat behavior
 
+New sessions default to Auto detect. Detection uses local prefix hints for AIza
+(Gemini), sk-proj-/sk-svcacct- (OpenAI), gsk_ (Groq), and sk-ant- (Claude).
+These are format hints, not guaranteed or authenticated provider identities.
+Generic sk- keys, proxy credentials, and unknown formats require explicit manual
+provider selection. The app never tries a key against multiple services. Detection
+does not make network requests. A detected key still needs provider access and quota.
+The auto-entry widget is session-local and cleared by Disconnect like manual keys.
+Image, voice and search credentials remain separate; no automatic key reuse was added.
+
 The sidebar includes provider/model selection, session key status, Check API connection,
 Refresh model list, Clear Chat, Disconnect and response controls. A successful model
 listing confirms accepted credentials, not funded generation access. Live model lists

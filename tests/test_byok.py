@@ -23,6 +23,8 @@ class BYOK(unittest.TestCase):
     def test_sessions_and_clear_button(self):
         path = str(Path(__file__).resolve().parents[1] / 'app.py')
         first, second = AppTest.from_file(path).run(), AppTest.from_file(path).run()
+        first.selectbox(key='chat_provider').select('Gemini').run()
+        second.selectbox(key='chat_provider').select('Gemini').run()
         first.text_input(key='chat_key_Gemini').set_value('fake-session-one').run()
         first.text_input(key='credential_voice').set_value('voice-only').run()
         self.assertEqual(second.text_input(key='chat_key_Gemini').value, '')

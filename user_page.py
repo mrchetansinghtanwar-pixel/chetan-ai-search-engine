@@ -4,6 +4,7 @@ import tomllib
 import streamlit as st
 from agent import google_search, GeminiError
 from providers import MODELS, list_models, chat_answer
+from provider_detection import detect_provider
 from byok import disconnect, expire_credentials, redact
 from chat_stream import stream_chat
 from image_service import create_image, create_cloudflare_image
@@ -65,10 +66,20 @@ with st.sidebar.expander("Workspace", expanded=False):
             st.rerun()
 st.sidebar.caption("Your key. Your quota. No sign-up required. AI usage is billed by your provider.")
 with st.sidebar.expander("AI connection", expanded=True):
-    chat_provider = st.selectbox("AI Provider", list(MODELS), key="chat_provider")
+    provider_choice = st.selectbox("AI Provider", ["Auto detect"] + list(MODELS), key="chat_provider")
+    automatic = provider_choice == "Auto detect"
+    entered_key = st.text_input("Chat API key" if automatic else f"{provider_choice} chat API key", type="password",
+                                key="chat_key_auto" if automatic else "chat_key_" + provider_choice).strip()
+    chat_provider = detect_provider(entered_key) if automatic else provider_choice
+    if automatic:
+        st.caption("Detection reads the key format locally. It does not validate the key or contact providers.")
+        if entered_key and chat_provider:
+            st.caption(f"Detected: {chat_provider} · key validity and quota are checked by the provider.")
+        elif entered_key:
+            st.warning("Cannot identify this key format. Select its provider above and enter the key there. No request has been sent.")
+    api_key = entered_key if chat_provider else ""
     if chat_provider == "Meta / Llama (via Groq)":
         st.caption("Use a Groq key. Llama model access depends on your Groq account.")
-    api_key = st.text_input(f"{chat_provider} chat API key", type="password", key="chat_key_" + chat_provider).strip()
     if api_key == "YOUR_GEMINI_API_KEY":
         api_key = ""
     if st.button("Check API connection", disabled=not api_key):
@@ -86,8 +97,10 @@ with st.sidebar.expander("AI connection", expanded=True):
             st.session_state["models_" + chat_provider] = list_models(chat_provider, api_key)
         except GeminiError as error:
             st.error(str(error))
-    model_options = st.session_state.get("models_" + chat_provider, MODELS[chat_provider])
-    model = st.selectbox("AI model", model_options + ["Custom model ID"], key="model_" + chat_provider)
+    model_options = st.session_state.get("models_" + chat_provider, MODELS[chat_provider]) if chat_provider else []
+    model = st.selectbox("AI model", model_options + ["Custom model ID"] if chat_provider else [],
+                         key="model_" + (chat_provider or "auto"), disabled=not chat_provider,
+                         placeholder="Enter a supported API key first")
     if model == "Custom model ID":
         model = st.text_input("Enter model ID", key="custom_model_" + chat_provider).strip()
     chat_ready = bool(api_key and model)

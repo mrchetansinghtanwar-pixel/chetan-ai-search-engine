@@ -59,6 +59,7 @@ class Tests(unittest.TestCase):
         app.secrets['GEMINI_API_KEY'] = key
         app.run()
         if key:
+            app.selectbox(key='chat_provider').select('Gemini').run()
             app.text_input(key='chat_key_Gemini').set_value(key).run()
         return app
 
