@@ -10,6 +10,7 @@ from chat_stream import stream_chat
 from image_service import create_image, create_cloudflare_image
 from utilities import show_tools
 from speech_input import speech_input
+from web_search import sync_home, web_search_ui
 
 st.set_page_config(page_title="Chetan AI • Search & chat", page_icon=":material/auto_awesome:", layout="centered", initial_sidebar_state="expanded")
 
@@ -49,7 +50,7 @@ def render_reply(message):
 
 
 
-workspace_options = ["Chat", "Chat with PDF", "Image Generator", "Voice", "PDF tools", "Text pad", "Calculator"]
+workspace_options = ["Web search", "Chat", "Chat with PDF", "Image Generator", "Voice", "PDF tools", "Text pad", "Calculator"]
 if st.session_state.get("workspace_mode") == "Admin Panel":
     st.session_state.workspace_mode = "Chat"
 
@@ -136,9 +137,9 @@ with st.sidebar:
     language = {"Auto": "the language of the user's latest message; detect it automatically (Hindi script for Hindi, English for English, Roman Hinglish for Roman Hindi)", "English": "English", "Hindi": "Hindi in Devanagari script", "Hinglish": "Roman Hinglish"}[language_choice]
     if language_choice == "Auto":
         st.caption("Auto: replies match the language of your question.")
-    use_search = st.toggle("Google web search", value=False, disabled=not google_ready,
+    use_search = st.toggle("Search in AI answers", value=False, disabled=not google_ready,
                            help="The assistant searches when needed, up to 3 searches per turn.")
-    st.caption("Google configured" if google_ready else "Google search is optional. See README for setup.")
+    st.caption("Google search tool configured" if google_ready else "AI search needs a separate Google API key. Web search works without one.")
     st.caption(f"{chat_provider} chat configured" if chat_ready else "Enter a chat key and select a model.")
     st.divider()
     if st.session_state.messages:
@@ -149,9 +150,13 @@ with st.sidebar:
     st.caption("Your questions are sent to the selected AI provider. When web search is enabled, search queries are also sent to Google.")
 
 st.html('<div class="brand"><span class="brand-mark">✳</span>Chetan AI<span class="brand-note">Your everyday AI workspace</span></div>')
+sync_home(st.session_state, chat_ready)
 tool_left, tool_center, tool_right = st.columns([1, 2, 1])
 with tool_center:
     mode = st.selectbox("Workspace / Tools", workspace_options, key="workspace_mode")
+if mode == "Web search":
+    web_search_ui(secret("GOOGLE_PSE_ID"))
+    st.stop()
 welcome_composer = None
 if mode == "Chat" and not st.session_state.messages:
     st.html('<div class="welcome"><h1>chetan ai <span class="byok-badge">BYOK</span></h1><p>Where curiosity becomes clarity.</p></div>')

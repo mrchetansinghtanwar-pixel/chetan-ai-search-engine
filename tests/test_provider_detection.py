@@ -20,7 +20,7 @@ class AutoProviderTests(unittest.TestCase):
     def test_auto_routing_is_local_isolated_and_clearable(self, stream, request):
         path = str(Path(__file__).resolve().parents[1] / 'app.py')
         app = AppTest.from_file(path).run()
-        self.assertTrue(app.chat_input[0].disabled)
+        self.assertTrue(not app.chat_input or app.chat_input[0].disabled)
         key = 'sk-proj-' + 'x' * 24
         app.text_input(key='chat_key_auto').set_value(key).run()
         self.assertFalse(app.exception)
@@ -32,9 +32,9 @@ class AutoProviderTests(unittest.TestCase):
         self.assertEqual(other.text_input(key='chat_key_auto').value, '')
         next(b for b in app.button if b.label == 'Disconnect / Clear credentials').click().run()
         self.assertEqual(app.text_input(key='chat_key_auto').value, '')
-        self.assertTrue(app.chat_input[0].disabled)
+        self.assertTrue(not app.chat_input or app.chat_input[0].disabled)
         app.text_input(key='chat_key_auto').set_value('unrecognized-key').run()
-        self.assertTrue(app.chat_input[0].disabled)
+        self.assertTrue(not app.chat_input or app.chat_input[0].disabled)
         request.assert_not_called()
 
     @patch('providers.requests.request')

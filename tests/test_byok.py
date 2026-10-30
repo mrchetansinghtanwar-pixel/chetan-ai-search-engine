@@ -32,7 +32,7 @@ class BYOK(unittest.TestCase):
         self.assertFalse(first.exception)
         self.assertEqual(first.text_input(key='chat_key_Gemini').value, '')
         self.assertEqual(first.text_input(key='credential_voice').value, '')
-        self.assertTrue(first.chat_input[0].disabled)
+        self.assertTrue(not first.chat_input or first.chat_input[0].disabled)
 
     def test_error_categories(self):
         for status, body, fragment in [(400, {'code': 'API_KEY_INVALID'}, 'Invalid API key'),

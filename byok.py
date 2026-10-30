@@ -8,7 +8,7 @@ def disconnect(state):
     for name in list(state):
         if name.startswith(CREDENTIAL_PREFIXES):
             state[name] = ''
-        elif name.startswith(('models_', 'verified_', 'qa_', 'speech_')):
+        elif name.startswith(('models_', 'verified_', 'qa_', 'speech_', 'public_search_')):
             del state[name]
     state['messages'] = []
     state['last_error'] = ''

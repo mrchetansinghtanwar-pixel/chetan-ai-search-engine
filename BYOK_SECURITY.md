@@ -48,6 +48,25 @@ The owner still pays any hosting costs and independently configured services.
 
 ## Chat behavior
 
+Visitors now start in Web search without entering a key. The owner configures
+`GOOGLE_PSE_ID` in Streamlit Secrets. This ID is intentionally public in the
+browser, with the owner's approval; it is not an API credential. Google renders
+its official search element and results in a sandboxed iframe without
+`allow-same-origin`. The search document receives only the validated PSE ID,
+never any chat key or chat history. Google receives search queries and may show
+ads; its own privacy/cookie policies apply. A Google-hosted fallback link is shown
+if the embedded widget cannot load. Do not add `allow-same-origin` to the inner
+iframe or load Google's script into the main app document. The app's search form
+keeps the query in session memory until disconnect/session cleanup. Only a submitted
+query loads the Google results panel; input is safely encoded for the embedded script.
+
+Entering a recognized chat key (or choosing its provider manually) opens Chat
+when the visitor is on the search/chat home. This is not validation of the key.
+Disconnecting or removing that key returns Chat to Web search. Other tools and
+deliberate navigation back to Web search are preserved. The existing optional
+Google search tool inside AI conversations still needs the visitor's separate
+Google API key and PSE ID; the public widget does not supply agent API access.
+
 New sessions default to Auto detect. Detection uses local prefix hints for AIza
 (Gemini), sk-proj-/sk-svcacct- (OpenAI), gsk_ (Groq), and sk-ant- (Claude).
 These are format hints, not guaranteed or authenticated provider identities.
